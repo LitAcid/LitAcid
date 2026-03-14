@@ -65,18 +65,21 @@ header p { font-size: 16px; color: #ccc; }
   cursor:pointer;
 }
 
-/* --- Theme Button Top-right --- */
-#themeButton {
+/* --- Theme Toolbox Top-right --- */
+#themeToolbox {
   position: fixed;
   top: 20px;
   right: 20px;
   z-index: 11;
-  padding:6px 10px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
   display: none;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.5);
+  padding: 6px 10px;
+  border-radius: 6px;
 }
+#themeToolbox label { color:white; font-size:14px; }
+#themeToolbox input[type=color] { cursor:pointer; }
 
 /* --- Container Boxes --- */
 .container {
@@ -158,8 +161,11 @@ header p { font-size: 16px; color: #ccc; }
   <button onclick="unlockEditor()">Unlock Editor Mode</button>
 </div>
 
-<!-- Theme Button -->
-<button id="themeButton">🎨 Theme</button>
+<!-- Theme Color Toolbox -->
+<div id="themeToolbox">
+  <label for="themeColorPicker">🎨 Theme:</label>
+  <input type="color" id="themeColorPicker" value="#0ff">
+</div>
 
 <!-- Boxes -->
 <div class="container">
@@ -255,31 +261,30 @@ document.addEventListener('click', ()=>{
   document.removeEventListener('click', arguments.callee);
 });
 
-// --- Editor Unlock + Theme ---
-const themeButton = document.getElementById("themeButton");
+// --- Editor Unlock + Theme Toolbox ---
+const themeToolbox = document.getElementById("themeToolbox");
+const themeColorPicker = document.getElementById("themeColorPicker");
 
 function unlockEditor(){
   const code = document.getElementById("editorPassword").value;
   if(code==="kys2"){
     document.getElementById("editableContent").contentEditable="true";
     alert("Editor Mode Unlocked!");
-    themeButton.style.display = "block"; // show theme button
+    themeToolbox.style.display = "flex";
   } else {
     alert("Incorrect code!");
   }
 }
 
-// Theme change logic
-themeButton.addEventListener("click", ()=>{
-  const newColor = prompt("Enter HEX color for theme:", "#0ff");
-  if(newColor){
-    document.documentElement.style.setProperty('--main-theme', newColor);
-    document.querySelectorAll('.box, .button').forEach(el=>{
-      el.style.borderColor = newColor;
-      el.style.boxShadow = `0 0 20px ${newColor}30`;
-    });
-    document.querySelector('header h1').style.textShadow = `0 0 12px ${newColor},0 0 24px ${newColor}55`;
-  }
+// Apply color live
+themeColorPicker.addEventListener("input", ()=>{
+  const newColor = themeColorPicker.value;
+  document.documentElement.style.setProperty('--main-theme', newColor);
+  document.querySelectorAll('.box, .button').forEach(el=>{
+    el.style.borderColor = newColor;
+    el.style.boxShadow = `0 0 20px ${newColor}30`;
+  });
+  document.querySelector('header h1').style.textShadow = `0 0 12px ${newColor},0 0 24px ${newColor}55`;
 });
 
 // LocalStorage for Work Box
