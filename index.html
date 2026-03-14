@@ -87,7 +87,8 @@ cursor:pointer;
 }
 
 #copyBtn{
-margin-top:8px;
+margin-left:10px;
+padding:4px 10px;
 }
 
 #playerList div{
@@ -118,10 +119,6 @@ position:fixed;
 top:10px;
 left:10px;
 z-index:50;
-}
-
-#editorUnlock input{
-padding:6px;
 }
 
 .lightning{
@@ -214,7 +211,7 @@ Nothing right now.
 
 </div>
 
-<audio id="music" autoplay loop>
+<audio id="music" loop preload="auto">
 <source src="https://image2url.com/r2/default/audio/1773480604788-5b579849-e3af-42d9-bfa5-a4f55956d700.mp3">
 </audio>
 
@@ -281,7 +278,7 @@ alert("IP Copied")
 
 }
 
-/* SERVER STATUS + PLAYERS */
+/* SERVER STATUS */
 
 async function fetchServer(){
 
@@ -338,6 +335,82 @@ document.getElementById("downloadSkin").href=tex.textures.SKIN.url
 }
 
 skin()
+
+/* PLAY MUSIC ON ANY INPUT */
+
+const music=document.getElementById("music")
+
+let musicStarted=false
+
+function startMusic(){
+
+if(musicStarted) return
+
+musicStarted=true
+
+music.play().catch(()=>{})
+
+}
+
+["click","keydown","scroll","touchstart","mousemove"].forEach(e=>{
+window.addEventListener(e,startMusic,{once:true})
+})
+
+/* MUSIC VISUALIZER */
+
+const ctxAudio=new AudioContext()
+
+const analyser=ctxAudio.createAnalyser()
+
+const source=ctxAudio.createMediaElementSource(music)
+
+source.connect(analyser)
+
+analyser.connect(ctxAudio.destination)
+
+analyser.fftSize=256
+
+const bufferLength=analyser.frequencyBinCount
+
+const dataArray=new Uint8Array(bufferLength)
+
+const vcanvas=document.getElementById("visualizer")
+
+const vctx=vcanvas.getContext("2d")
+
+vcanvas.width=window.innerWidth
+vcanvas.height=120
+
+function drawVisualizer(){
+
+requestAnimationFrame(drawVisualizer)
+
+analyser.getByteFrequencyData(dataArray)
+
+vctx.clearRect(0,0,vcanvas.width,vcanvas.height)
+
+const barWidth=vcanvas.width/bufferLength
+
+let x=0
+
+for(let i=0;i<bufferLength;i++){
+
+const h=dataArray[i]
+
+vctx.fillStyle="cyan"
+
+vctx.fillRect(x,vcanvas.height-h/2,barWidth,h/2)
+
+x+=barWidth+1
+
+}
+
+}
+
+music.addEventListener("play",()=>{
+ctxAudio.resume()
+drawVisualizer()
+})
 
 /* RAIN */
 
@@ -413,68 +486,6 @@ thunder.play()
 }
 
 },4000)
-
-/* MUSIC VISUALIZER */
-
-const music=document.getElementById("music")
-
-const ctxAudio=new AudioContext()
-
-const analyser=ctxAudio.createAnalyser()
-
-const source=ctxAudio.createMediaElementSource(music)
-
-source.connect(analyser)
-
-analyser.connect(ctxAudio.destination)
-
-analyser.fftSize=256
-
-const bufferLength=analyser.frequencyBinCount
-
-const dataArray=new Uint8Array(bufferLength)
-
-const vcanvas=document.getElementById("visualizer")
-
-const vctx=vcanvas.getContext("2d")
-
-vcanvas.width=window.innerWidth
-
-vcanvas.height=120
-
-function drawVisualizer(){
-
-requestAnimationFrame(drawVisualizer)
-
-analyser.getByteFrequencyData(dataArray)
-
-vctx.clearRect(0,0,vcanvas.width,vcanvas.height)
-
-const barWidth=vcanvas.width/bufferLength
-
-let x=0
-
-for(let i=0;i<bufferLength;i++){
-
-const h=dataArray[i]
-
-vctx.fillStyle="cyan"
-
-vctx.fillRect(x,vcanvas.height-h/2,barWidth,h/2)
-
-x+=barWidth+1
-
-}
-
-}
-
-music.onplay=()=>{
-
-ctxAudio.resume()
-
-drawVisualizer()
-
-}
 
 </script>
 
