@@ -42,25 +42,6 @@ header h1{font-family:Orbitron;font-size:48px;letter-spacing:4px;}
 .button:hover{ background:#dcdcdc; transform:scale(1.04); }
 #editableContent{ min-height:80px; outline:none; }
 
-/* Music Player */
-.music{
-  position:fixed;
-  bottom:20px;
-  left:20px;
-  background:rgba(255,255,255,0.1);
-  padding:12px 16px;
-  border-radius:16px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  cursor:pointer;
-  backdrop-filter:blur(8px);
-  transition:0.3s;
-}
-.music:hover{ background:rgba(255,255,255,0.2); transform:scale(1.05); }
-.music-icon{ font-size:20px; }
-.music-name{ font-weight:600; font-family:Orbitron; }
-
 @media(max-width:850px){ .container{ flex-direction:column; align-items:center; } .server{ order:-1; } }
 </style>
 </head>
@@ -114,12 +95,7 @@ Players: <span id="serverPlayers">Loading...</span>
 
 </div>
 
-<!-- Music Player -->
-<div class="music" id="musicPlayerContainer">
-  <span class="music-icon" id="musicIcon">▶️</span>
-  <span class="music-name">Pitbull - Meet Me At The Hotel Room (Slowed)</span>
-</div>
-
+<!-- Hidden music -->
 <audio id="musicPlayer" loop>
   <source src="https://managerial-cyan-zl78blye6m.edgeone.app/pitbull_-_meet_me_at_the_hotel_room_slowed_(mp3.pm).mp3" type="audio/mpeg">
 </audio>
@@ -164,24 +140,13 @@ setInterval(()=>{
   }
 },4000);
 
-// Music Player
+// Auto-play music after first click anywhere
 const music = document.getElementById("musicPlayer");
-const musicContainer = document.getElementById("musicPlayerContainer");
-const musicIcon = document.getElementById("musicIcon");
-
-// Play music on first interaction automatically
-function startMusicOnce() {
-  music.play().then(()=>{ musicIcon.textContent="⏸️"; })
-    .catch(err=>console.error("Playback failed:", err));
+function startMusicOnce(){
+  music.play().catch(err=>console.error(err));
   document.removeEventListener('click', startMusicOnce);
 }
 document.addEventListener('click', startMusicOnce);
-
-// Toggle play/pause manually
-musicContainer.addEventListener("click", () => {
-  if(music.paused){ music.play().then(()=>musicIcon.textContent="⏸️"); }
-  else { music.pause(); musicIcon.textContent="▶️"; }
-});
 
 // Editor unlock
 function unlockEditor(){
@@ -197,16 +162,15 @@ const editable = document.getElementById("editableContent");
 editable.innerHTML = localStorage.getItem("workText") || editable.innerHTML;
 editable.addEventListener("input", ()=>{ localStorage.setItem("workText", editable.innerHTML); });
 
-// Minecraft Server Info
+// Minecraft Server Info using mcstatus.io
 async function fetchServerInfo(){
   const ip="quitmc.playwithbao.com";
-  const port=25565;
   try{
-    const response = await fetch(`https://api.mcsrvstat.us/2/${ip}:${port}`);
+    const response = await fetch(`https://api.mcstatus.io/v2/status/java/${ip}`);
     const data = await response.json();
     document.getElementById("serverStatus").textContent = data.online ? "Online ✅" : "Offline ❌";
-    document.getElementById("serverPlayers").textContent = data.online ? `${data.players?.online||0} / ${data.players?.max||"?"}` : "-";
-    document.getElementById("serverMOTD").textContent = data.online && data.motd?.clean ? "MOTD: "+data.motd.clean.join(" ") : "";
+    document.getElementById("serverPlayers").textContent = data.online ? `${data.players?.online || 0} / ${data.players?.max || "?"}` : "-";
+    document.getElementById("serverMOTD").textContent = data.motd?.clean ? "MOTD: "+data.motd.clean.join(" ") : "";
   } catch(err){
     document.getElementById("serverStatus").textContent="Error ❌";
     document.getElementById("serverPlayers").textContent="-";
