@@ -6,6 +6,10 @@
 <title>LitAcid</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
 :root {
   --main-theme: #0ff;
@@ -72,14 +76,12 @@ header p { font-size: 16px; color: #ccc; }
   right: 20px;
   z-index: 11;
   display: none;
-  align-items: center;
-  gap: 6px;
   background: rgba(0,0,0,0.5);
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding:6px;
+  border-radius:6px;
 }
-#themeToolbox label { color:white; font-size:14px; }
-#themeToolbox input[type=color] { cursor:pointer; }
+#themeToolbox span { color:white; font-size:14px; }
+#themeToolbox div { display:flex; gap:4px; margin-top:4px; }
 
 /* --- Container Boxes --- */
 .container {
@@ -161,10 +163,10 @@ header p { font-size: 16px; color: #ccc; }
   <button onclick="unlockEditor()">Unlock Editor Mode</button>
 </div>
 
-<!-- Theme Color Toolbox -->
+<!-- Theme Toolbox -->
 <div id="themeToolbox">
-  <label for="themeColorPicker">🎨 Theme:</label>
-  <input type="color" id="themeColorPicker" value="#0ff">
+  <span>🎨 Theme:</span>
+  <div id="themeSwatches"></div>
 </div>
 
 <!-- Boxes -->
@@ -207,6 +209,19 @@ header p { font-size: 16px; color: #ccc; }
 </div>
 
 <script>
+// --- Firebase Config ---
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // --- Rain & Particles ---
 const canvas = document.getElementById("rain");
 const ctx = canvas.getContext("2d");
@@ -215,13 +230,7 @@ canvas.height = window.innerHeight;
 
 let rain = [];
 for(let i=0;i<400;i++){
-  rain.push({
-    x: Math.random()*canvas.width,
-    y: Math.random()*canvas.height,
-    l: Math.random()*1.2,
-    xs: -2+Math.random()*4,
-    ys: 8+Math.random()*10
-  });
+  rain.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, l: Math.random()*1.2, xs: -2+Math.random()*4, ys: 8+Math.random()*10 });
 }
 
 function drawRain(){
@@ -229,41 +238,32 @@ function drawRain(){
   ctx.strokeStyle="rgba(0,255,255,0.15)";
   ctx.lineWidth=1;
   ctx.beginPath();
-  for(let r of rain){
-    ctx.moveTo(r.x,r.y);
-    ctx.lineTo(r.x+r.l*r.xs,r.y+r.l*r.ys);
-  }
+  for(let r of rain){ ctx.moveTo(r.x,r.y); ctx.lineTo(r.x+r.l*r.xs,r.y+r.l*r.ys); }
   ctx.stroke();
   moveRain();
 }
-function moveRain(){
-  for(let r of rain){
-    r.x += r.xs; r.y += r.ys;
-    if(r.x>canvas.width||r.y>canvas.height){
-      r.x=Math.random()*canvas.width; r.y=-20;
-    }
-  }
-}
-setInterval(drawRain, 30);
+function moveRain(){ for(let r of rain){ r.x+=r.xs; r.y+=r.ys; if(r.x>canvas.width||r.y>canvas.height){ r.x=Math.random()*canvas.width; r.y=-20; } } }
+setInterval(drawRain,30);
 
 // Thunder flashes
-setInterval(()=>{
-  if(Math.random()>0.92){
-    document.body.style.background="#111";
-    setTimeout(()=>{document.body.style.background="#050505";}, 120)
-  }
-}, 4000);
+setInterval(()=>{ if(Math.random()>0.92){ document.body.style.background="#111"; setTimeout(()=>{document.body.style.background="#050505";},120) } },4000);
 
 // Music autoplay after first click
 const music = document.getElementById("musicPlayer");
-document.addEventListener('click', ()=>{
-  music.play().catch(()=>{});
-  document.removeEventListener('click', arguments.callee);
-});
+document.addEventListener('click',()=>{ music.play().catch(()=>{}); document.removeEventListener('click', arguments.callee); });
 
-// --- Editor Unlock + Theme Toolbox ---
+// --- Editor Unlock + Theme Palette ---
 const themeToolbox = document.getElementById("themeToolbox");
-const themeColorPicker = document.getElementById("themeColorPicker");
+const themeSwatches = document.getElementById("themeSwatches");
+const colors = ["#0ff","#ff0","#f0f","#0f0","#f00","#00f","#fff","#0aa"];
+
+colors.forEach(c=>{
+  const swatch = document.createElement("div");
+  swatch.style.width="24px"; swatch.style.height="24px"; swatch.style.borderRadius="4px";
+  swatch.style.cursor="pointer"; swatch.style.background=c; swatch.title=c;
+  swatch.addEventListener("click",()=>changeTheme(c));
+  themeSwatches.appendChild(swatch);
+});
 
 function unlockEditor(){
   const code = document.getElementById("editorPassword").value;
@@ -271,64 +271,56 @@ function unlockEditor(){
     document.getElementById("editableContent").contentEditable="true";
     alert("Editor Mode Unlocked!");
     themeToolbox.style.display = "flex";
-  } else {
-    alert("Incorrect code!");
-  }
+  } else alert("Incorrect code!");
 }
 
-// Apply color live
-themeColorPicker.addEventListener("input", ()=>{
-  const newColor = themeColorPicker.value;
-  document.documentElement.style.setProperty('--main-theme', newColor);
-  document.querySelectorAll('.box, .button').forEach(el=>{
-    el.style.borderColor = newColor;
-    el.style.boxShadow = `0 0 20px ${newColor}30`;
+function applyTheme(color){
+  document.documentElement.style.setProperty('--main-theme', color);
+  document.querySelectorAll('.box,.button').forEach(el=>{
+    el.style.borderColor=color;
+    el.style.boxShadow=`0 0 20px ${color}30`;
   });
-  document.querySelector('header h1').style.textShadow = `0 0 12px ${newColor},0 0 24px ${newColor}55`;
-});
+  document.querySelector('header h1').style.textShadow=`0 0 12px ${color},0 0 24px ${color}55`;
+}
 
-// LocalStorage for Work Box
+// Change theme locally + update Firebase
+function changeTheme(color){ applyTheme(color); db.ref('theme').set({color:color}); }
+
+// Fetch theme from Firebase live
+db.ref('theme/color').on('value', snapshot=>{ const color=snapshot.val()||"#0ff"; applyTheme(color); });
+
+// --- LocalStorage for Work Box ---
 const editable = document.getElementById("editableContent");
 editable.innerHTML = localStorage.getItem("workText") || editable.innerHTML;
-editable.addEventListener("input", ()=>{
-  localStorage.setItem("workText", editable.innerHTML);
-});
+editable.addEventListener("input", ()=>{ localStorage.setItem("workText", editable.innerHTML); });
 
-// Fetch Minecraft Server Info
+// --- Fetch Minecraft Server Info ---
 async function fetchServerInfo(){
   const ip="quitmc.playwithbao.com", port=25565;
   try{
     const res=await fetch(`https://mcapi.us/server/status?ip=${ip}&port=${port}`);
-    const data = await res.json();
-    document.getElementById("serverStatus").textContent = data.online ? "Online ✅" : "Offline ❌";
-    document.getElementById("serverPlayers").textContent = data.online ? `${data.players.now || 0} / ${data.players.max || "?"}` : "-";
-    document.getElementById("serverMOTD").textContent = data.online && data.motd ? `MOTD: ${data.motd}` : "";
-  }catch(err){
-    console.error(err);
-    document.getElementById("serverStatus").textContent="Error ❌";
-    document.getElementById("serverPlayers").textContent="-";
-    document.getElementById("serverMOTD").textContent="";
-  }
+    const data=await res.json();
+    document.getElementById("serverStatus").textContent=data.online?"Online ✅":"Offline ❌";
+    document.getElementById("serverPlayers").textContent=data.online?`${data.players.now||0} / ${data.players.max||"?"}`:"-";
+    document.getElementById("serverMOTD").textContent=data.online&&data.motd?`MOTD: ${data.motd}`:"";
+  }catch(err){ console.error(err); document.getElementById("serverStatus").textContent="Error ❌"; document.getElementById("serverPlayers").textContent="-"; document.getElementById("serverMOTD").textContent=""; }
 }
-fetchServerInfo();
-setInterval(fetchServerInfo,15000);
+fetchServerInfo(); setInterval(fetchServerInfo,15000);
 
-// Fetch Skin & Set Download
+// --- Fetch Skin & Set Download ---
 async function setSkinDownload(){
   try{
     const username="litacid";
     const uuidRes=await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
     const uuidData=await uuidRes.json();
     const uuid=uuidData.id;
-
     const profRes=await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`);
     const profData=await profRes.json();
     const skinProp = profData.properties.find(p=>p.name==="textures");
     const skinJSON = JSON.parse(atob(skinProp.value));
     const skinURL = skinJSON.textures.SKIN.url;
-
-    document.getElementById("downloadSkin").href = skinURL;
-  }catch(err){console.error(err);}
+    document.getElementById("downloadSkin").href=skinURL;
+  }catch(err){ console.error(err); }
 }
 setSkinDownload();
 </script>
