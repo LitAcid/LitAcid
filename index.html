@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>LitAcid</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Inter&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
 
-:root{--theme:rgb(255,0,0)}
+:root{--theme:#ff0000}
 
 body{
 margin:0;
@@ -36,7 +38,7 @@ left:0;
 width:100%;
 height:120px;
 z-index:-2;
-opacity:0.5;
+opacity:.5;
 }
 
 header{
@@ -81,6 +83,11 @@ background:white;
 color:black;
 text-decoration:none;
 font-weight:600;
+cursor:pointer;
+}
+
+#copyBtn{
+margin-top:8px;
 }
 
 #playerList div{
@@ -106,6 +113,17 @@ padding:8px 12px;
 border-radius:8px;
 }
 
+#editorUnlock{
+position:fixed;
+top:10px;
+left:10px;
+z-index:50;
+}
+
+#editorUnlock input{
+padding:6px;
+}
+
 .lightning{
 position:fixed;
 top:0;
@@ -118,21 +136,30 @@ pointer-events:none;
 }
 
 @media(max-width:850px){
+
 .container{
 flex-direction:column;
 align-items:center;
 }
+
 .box{width:90%}
+
 }
 
 </style>
 </head>
+
 <body>
+
+<div id="editorUnlock">
+<input id="editorPass" type="password" placeholder="editor code">
+<button onclick="unlockEditor()">unlock</button>
+</div>
 
 <canvas id="rain"></canvas>
 <canvas id="visualizer"></canvas>
 
-<div class="lightning" id="lightning"></div>
+<div id="lightning" class="lightning"></div>
 
 <header>
 <h1>LitAcid</h1>
@@ -142,18 +169,24 @@ align-items:center;
 <div class="container">
 
 <div class="box">
+
 <h3>Connect</h3>
+
 <a class="button" href="https://youtube.com/@litacid">YouTube</a>
+
 <a class="button" href="https://instagram.com/litacid2">Instagram</a>
-<a class="button">Discord: @litacid</a>
+
+<div class="button">Discord: @litacid</div>
+
 </div>
 
 <div class="box server">
+
 <h3>Minecraft Server</h3>
 
 <p>
-IP: <b>quitmc.playwithbao.com</b><br>
-Port: 25565
+IP: <b id="serverIP">quitmc.playwithbao.com</b>
+<button id="copyBtn" onclick="copyIP()">Copy</button>
 </p>
 
 <p>
@@ -164,12 +197,14 @@ Players: <span id="serverPlayers">...</span>
 <p id="serverMOTD"></p>
 
 <h4>Online Players</h4>
+
 <div id="playerList">Loading...</div>
 
 </div>
 
 <div class="box">
-<h3>What am I working on rn</h3>
+
+<h3>What I am working on rn</h3>
 
 <div id="editableContent" contenteditable="false">
 Nothing right now.
@@ -179,8 +214,8 @@ Nothing right now.
 
 </div>
 
-<audio id="music" autoplay muted loop>
-<source src="https://image2url.com/r2/default/audio/1773480604788-5b579849-e3af-42d9-bfa5-a4f55956d700.mp3" type="audio/mpeg">
+<audio id="music" autoplay loop>
+<source src="https://image2url.com/r2/default/audio/1773480604788-5b579849-e3af-42d9-bfa5-a4f55956d700.mp3">
 </audio>
 
 <audio id="thunderSound">
@@ -210,14 +245,21 @@ firebase.initializeApp(firebaseConfig)
 
 const db=firebase.database()
 
-/* MUSIC */
+/* EDITOR MODE */
 
-const music=document.getElementById("music")
+function unlockEditor(){
 
-setTimeout(()=>{
-music.muted=false
-music.play().catch(()=>{})
-},2000)
+if(document.getElementById("editorPass").value==="kys2"){
+
+document.getElementById("editableContent").contentEditable=true
+
+document.getElementById("visitorBox").style.display="block"
+
+alert("Editor Mode Enabled")
+
+}
+
+}
 
 /* VISITOR COUNTER */
 
@@ -229,11 +271,19 @@ visitRef.on("value",snap=>{
 document.getElementById("visitorCount").textContent=snap.val()
 })
 
+/* COPY IP */
+
+function copyIP(){
+
+navigator.clipboard.writeText("quitmc.playwithbao.com")
+
+alert("IP Copied")
+
+}
+
 /* SERVER STATUS + PLAYERS */
 
 async function fetchServer(){
-
-try{
 
 const r=await fetch("https://api.mcsrvstat.us/3/quitmc.playwithbao.com")
 
@@ -262,14 +312,15 @@ list.appendChild(div)
 })
 
 }else{
-list.innerHTML="No players online"
-}
 
-}catch{}
+list.innerHTML="No players online"
+
+}
 
 }
 
 fetchServer()
+
 setInterval(fetchServer,15000)
 
 /* SKIN DOWNLOAD */
@@ -314,6 +365,7 @@ function drawRain(){
 rctx.clearRect(0,0,rainCanvas.width,rainCanvas.height)
 
 rctx.strokeStyle="rgba(255,255,255,0.15)"
+
 rctx.beginPath()
 
 rain.forEach(r=>{
@@ -325,8 +377,10 @@ r.x+=r.xs
 r.y+=r.ys
 
 if(r.y>rainCanvas.height){
+
 r.y=-10
 r.x=Math.random()*rainCanvas.width
+
 }
 
 })
@@ -362,15 +416,17 @@ thunder.play()
 
 /* MUSIC VISUALIZER */
 
-const audioCtx=new AudioContext()
+const music=document.getElementById("music")
 
-const analyser=audioCtx.createAnalyser()
+const ctxAudio=new AudioContext()
 
-const source=audioCtx.createMediaElementSource(music)
+const analyser=ctxAudio.createAnalyser()
+
+const source=ctxAudio.createMediaElementSource(music)
 
 source.connect(analyser)
 
-analyser.connect(audioCtx.destination)
+analyser.connect(ctxAudio.destination)
 
 analyser.fftSize=256
 
@@ -383,6 +439,7 @@ const vcanvas=document.getElementById("visualizer")
 const vctx=vcanvas.getContext("2d")
 
 vcanvas.width=window.innerWidth
+
 vcanvas.height=120
 
 function drawVisualizer(){
@@ -401,7 +458,7 @@ for(let i=0;i<bufferLength;i++){
 
 const h=dataArray[i]
 
-vctx.fillStyle="rgb(0,255,255)"
+vctx.fillStyle="cyan"
 
 vctx.fillRect(x,vcanvas.height-h/2,barWidth,h/2)
 
@@ -411,31 +468,13 @@ x+=barWidth+1
 
 }
 
-music.addEventListener("play",()=>{
-audioCtx.resume()
+music.onplay=()=>{
+
+ctxAudio.resume()
+
 drawVisualizer()
-})
 
-/* COLOR CYCLE */
-
-let r=255,g=0,b=0
-
-setInterval(()=>{
-
-if(r>0&&b===0){r--;g++}
-else if(g>0&&r===0){g--;b++}
-else if(b>0&&g===0){b--;r++}
-
-const c=`rgb(${r},${g},${b})`
-
-document.documentElement.style.setProperty("--theme",c)
-
-document.querySelectorAll(".box").forEach(el=>{
-el.style.borderColor=c
-el.style.boxShadow=`0 0 20px ${c}`
-})
-
-},30)
+}
 
 </script>
 
