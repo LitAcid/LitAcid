@@ -7,6 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
 
 <style>
+:root {
+  --main-theme: #0ff;
+}
+
 /* --- Base Styles --- */
 body {
   margin: 0;
@@ -14,14 +18,8 @@ body {
   color: white;
   font-family: Inter;
   overflow: hidden;
-  cursor: url('https://i.imgur.com/4NZ6uLY.png'), auto; /* optional custom cursor */
 }
-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: -3;
-}
+canvas { position: fixed; top: 0; left: 0; z-index: -3; }
 
 /* --- Fog --- */
 .fog {
@@ -32,10 +30,7 @@ canvas {
   animation: fogmove 50s linear infinite;
   z-index: -2;
 }
-@keyframes fogmove {
-  0% { transform: translate(-20%, -20%) }
-  100% { transform: translate(0%,0%) }
-}
+@keyframes fogmove { 0%{transform:translate(-20%,-20%)} 100%{transform:translate(0%,0%)} }
 
 /* --- Header --- */
 header {
@@ -46,13 +41,10 @@ header h1 {
   font-family: Orbitron;
   font-size: 52px;
   letter-spacing: 5px;
-  color: #0ff;
-  text-shadow: 0 0 12px #0ff, 0 0 24px #0ff55;
+  color: var(--main-theme);
+  text-shadow: 0 0 12px var(--main-theme), 0 0 24px var(--main-theme)55;
 }
-header p {
-  font-size: 16px;
-  color: #ccc;
-}
+header p { font-size: 16px; color: #ccc; }
 
 /* --- Unlock Editor Top-left --- */
 #unlockBox {
@@ -73,6 +65,19 @@ header p {
   cursor:pointer;
 }
 
+/* --- Theme Button Top-right --- */
+#themeButton {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 11;
+  padding:6px 10px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  display: none;
+}
+
 /* --- Container Boxes --- */
 .container {
   display:flex;
@@ -83,22 +88,21 @@ header p {
 }
 .box {
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(0,255,255,0.15);
+  border: 1px solid var(--main-theme);
   border-radius: 20px;
   padding: 30px;
   width: 280px;
   backdrop-filter: blur(15px);
   transition: 0.4s;
-  box-shadow: 0 0 20px rgba(0,255,255,0.1);
+  box-shadow: 0 0 20px var(--main-theme)30;
 }
 .box:hover {
   transform: translateY(-8px);
-  box-shadow: 0 0 35px rgba(0,255,255,0.2);
+  box-shadow: 0 0 35px var(--main-theme)50;
 }
-.server {
-  width: 340px;
-  border-color: rgba(0,255,255,0.25);
-}
+.server { width: 340px; }
+
+/* --- Buttons --- */
 .button {
   display:block;
   text-align:center;
@@ -110,20 +114,17 @@ header p {
   text-decoration:none;
   font-weight:600;
   transition:0.3s;
-  box-shadow: 0 0 10px rgba(0,255,255,0.2);
+  box-shadow: 0 0 10px var(--main-theme)30;
 }
 .button:hover {
-  background: #0ff;
+  background: var(--main-theme);
   color: #050505;
   transform: scale(1.05);
-  box-shadow: 0 0 25px #0ff;
+  box-shadow: 0 0 25px var(--main-theme);
 }
 
 /* --- Editable Content --- */
-#editableContent {
-  min-height: 80px;
-  outline: none;
-}
+#editableContent { min-height: 80px; outline:none; }
 
 /* --- Skin Button Bottom-left --- */
 #skinButton {
@@ -132,10 +133,7 @@ header p {
   left: 20px;
   z-index: 10;
 }
-#skinButton .button {
-  padding:8px 12px;
-  font-size:14px;
-}
+#skinButton .button { padding:8px 12px; font-size:14px; }
 
 /* --- Responsive --- */
 @media(max-width:850px){
@@ -159,6 +157,9 @@ header p {
   <input type="password" id="editorPassword" placeholder="Enter code to unlock editor">
   <button onclick="unlockEditor()">Unlock Editor Mode</button>
 </div>
+
+<!-- Theme Button -->
+<button id="themeButton">🎨 Theme</button>
 
 <!-- Boxes -->
 <div class="container">
@@ -254,16 +255,32 @@ document.addEventListener('click', ()=>{
   document.removeEventListener('click', arguments.callee);
 });
 
-// Editor Unlock
+// --- Editor Unlock + Theme ---
+const themeButton = document.getElementById("themeButton");
+
 function unlockEditor(){
   const code = document.getElementById("editorPassword").value;
   if(code==="kys2"){
     document.getElementById("editableContent").contentEditable="true";
     alert("Editor Mode Unlocked!");
+    themeButton.style.display = "block"; // show theme button
   } else {
     alert("Incorrect code!");
   }
 }
+
+// Theme change logic
+themeButton.addEventListener("click", ()=>{
+  const newColor = prompt("Enter HEX color for theme:", "#0ff");
+  if(newColor){
+    document.documentElement.style.setProperty('--main-theme', newColor);
+    document.querySelectorAll('.box, .button').forEach(el=>{
+      el.style.borderColor = newColor;
+      el.style.boxShadow = `0 0 20px ${newColor}30`;
+    });
+    document.querySelector('header h1').style.textShadow = `0 0 12px ${newColor},0 0 24px ${newColor}55`;
+  }
+});
 
 // LocalStorage for Work Box
 const editable = document.getElementById("editableContent");
@@ -310,5 +327,6 @@ async function setSkinDownload(){
 }
 setSkinDownload();
 </script>
+
 </body>
 </html>
