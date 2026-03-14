@@ -15,16 +15,7 @@ body{
   font-family:Inter;
   overflow:hidden;
 }
-
-/* Rain canvas */
-canvas{
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:-2;
-}
-
-/* Fog particles */
+canvas{ position:fixed; top:0; left:0; z-index:-2; }
 .fog{
   position:fixed;
   width:200%;
@@ -33,123 +24,46 @@ canvas{
   animation:fogmove 40s linear infinite;
   z-index:-1;
 }
-@keyframes fogmove{
-  0%{transform:translate(-20%,-20%)}
-  100%{transform:translate(0%,0%)}
-}
-
-/* Header */
-header{
-  text-align:center;
-  padding:70px 20px;
-}
-header h1{
-  font-family:Orbitron;
-  font-size:48px;
-  letter-spacing:4px;
-}
+@keyframes fogmove{ 0%{transform:translate(-20%,-20%)} 100%{transform:translate(0%,0%)} }
+header{text-align:center;padding:70px 20px;}
+header h1{font-family:Orbitron;font-size:48px;letter-spacing:4px;}
 
 /* Unlock editor */
-#unlockBox {
-  text-align:center;
-  margin-bottom: 20px;
-}
-#unlockBox input {
-  padding:6px 8px;
-  border-radius:6px;
-  border:none;
-  outline:none;
-  margin-right:6px;
-}
-#unlockBox button {
-  padding:6px 10px;
-  border-radius:6px;
-  border:none;
-  cursor:pointer;
-  background:white;
-  color:black;
-  font-weight:600;
-}
+#unlockBox { text-align:center;margin-bottom:20px; }
+#unlockBox input { padding:6px 8px; border-radius:6px; border:none; outline:none; margin-right:6px; }
+#unlockBox button { padding:6px 10px; border-radius:6px; border:none; cursor:pointer; background:white; color:black; font-weight:600; }
 
 /* Layout */
-.container{
-  display:flex;
-  justify-content:center;
-  gap:40px;
-  padding:40px;
-  flex-wrap:wrap;
-}
+.container{ display:flex; justify-content:center; gap:40px; padding:40px; flex-wrap:wrap; }
+.box{ background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:30px; width:260px; backdrop-filter:blur(12px); transition:0.4s; }
+.box:hover{ transform:translateY(-6px); box-shadow:0 0 25px rgba(255,255,255,0.08); }
+.server{ width:320px; border:1px solid rgba(255,255,255,0.3); box-shadow:0 0 25px rgba(255,255,255,0.1); }
+.button{ display:block; text-align:center; padding:12px; margin:12px 0; border-radius:12px; background:white; color:black; text-decoration:none; font-weight:600; transition:0.3s; }
+.button:hover{ background:#dcdcdc; transform:scale(1.04); }
+#editableContent{ min-height:80px; outline:none; }
 
-/* Glass boxes */
-.box{
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:18px;
-  padding:30px;
-  width:260px;
-  backdrop-filter:blur(12px);
-  transition:0.4s;
-}
-.box:hover{
-  transform:translateY(-6px);
-  box-shadow:0 0 25px rgba(255,255,255,0.08);
-}
-
-/* Server centerpiece */
-.server{
-  width:320px;
-  border:1px solid rgba(255,255,255,0.3);
-  box-shadow:0 0 25px rgba(255,255,255,0.1);
-}
-
-/* Buttons */
-.button{
-  display:block;
-  text-align:center;
-  padding:12px;
-  margin:12px 0;
-  border-radius:12px;
-  background:white;
-  color:black;
-  text-decoration:none;
-  font-weight:600;
-  transition:0.3s;
-}
-.button:hover{
-  background:#dcdcdc;
-  transform:scale(1.04);
-}
-
-/* Music player */
+/* Music Player */
 .music{
   position:fixed;
   bottom:20px;
   left:20px;
   background:rgba(255,255,255,0.1);
   padding:12px 16px;
-  border-radius:12px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
   cursor:pointer;
+  backdrop-filter:blur(8px);
+  transition:0.3s;
 }
+.music:hover{ background:rgba(255,255,255,0.2); transform:scale(1.05); }
+.music-icon{ font-size:20px; }
+.music-name{ font-weight:600; font-family:Orbitron; }
 
-/* Editable content */
-#editableContent{
-  min-height:80px;
-  outline:none;
-}
-
-/* Mobile */
-@media(max-width:850px){
-  .container{
-    flex-direction:column;
-    align-items:center;
-  }
-  .server{
-    order:-1;
-  }
-}
+@media(max-width:850px){ .container{ flex-direction:column; align-items:center; } .server{ order:-1; } }
 </style>
 </head>
-
 <body>
 
 <canvas id="rain"></canvas>
@@ -180,13 +94,14 @@ header h1{
 <div class="box server">
 <h3>Minecraft Server</h3>
 <p>
-IP: <b>quitmc.playwithbao.com</b><br>
-Port: 25565
+IP: <b id="serverIP">quitmc.playwithbao.com</b><br>
+Port: <span id="serverPort">25565</span>
 </p>
 <p>
-Status: Online<br>
-Players: Loading...
+Status: <span id="serverStatus">Loading...</span><br>
+Players: <span id="serverPlayers">Loading...</span>
 </p>
+<p id="serverMOTD"></p>
 </div>
 
 <!-- What am I working on box -->
@@ -199,32 +114,26 @@ Players: Loading...
 
 </div>
 
-<!-- Music -->
-<div class="music" onclick="toggleMusic()">🎵 Play / Pause Music</div>
+<!-- Music Player -->
+<div class="music" id="musicPlayerContainer">
+  <span class="music-icon" id="musicIcon">▶️</span>
+  <span class="music-name">Chubina</span>
+</div>
 
 <audio id="musicPlayer" loop>
-  <!-- Replace this URL with your Chubina mp3 link -->
   <source src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Chubina/Chubina/Chubina.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-/* Rain animation */
+// Rain animation
 const canvas=document.getElementById("rain");
 const ctx=canvas.getContext("2d");
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
-
 let rain=[];
 for(let i=0;i<300;i++){
-  rain.push({
-    x:Math.random()*canvas.width,
-    y:Math.random()*canvas.height,
-    l:Math.random()*1,
-    xs:-4+Math.random()*4,
-    ys:8+Math.random()*10
-  })
+  rain.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, l:Math.random()*1, xs:-4+Math.random()*4, ys:8+Math.random()*10});
 }
-
 function drawRain(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.strokeStyle="rgba(255,255,255,0.15)";
@@ -238,22 +147,16 @@ function drawRain(){
   ctx.stroke();
   moveRain();
 }
-
 function moveRain(){
   for(let i=0;i<rain.length;i++){
     let r=rain[i];
-    r.x+=r.xs;
-    r.y+=r.ys;
-    if(r.x>canvas.width||r.y>canvas.height){
-      r.x=Math.random()*canvas.width;
-      r.y=-20;
-    }
+    r.x+=r.xs; r.y+=r.ys;
+    if(r.x>canvas.width||r.y>canvas.height){ r.x=Math.random()*canvas.width; r.y=-20; }
   }
 }
-
 setInterval(drawRain,30);
 
-/* Thunder flash */
+// Thunder flash
 setInterval(()=>{
   if(Math.random()>0.9){
     document.body.style.background="#111";
@@ -261,42 +164,66 @@ setInterval(()=>{
   }
 },4000);
 
-/* Music */
+// Music Player
 const music = document.getElementById("musicPlayer");
+const musicContainer = document.getElementById("musicPlayerContainer");
+const musicIcon = document.getElementById("musicIcon");
 
 function toggleMusic(){
   if(music.paused){
     music.play();
+    musicIcon.textContent = "⏸️";
   } else {
     music.pause();
+    musicIcon.textContent = "▶️";
   }
 }
+document.addEventListener("click", ()=>{ music.play().then(()=>{ musicIcon.textContent = "⏸️"; }).catch(()=>{}); },{ once:true });
+musicContainer.addEventListener("click", toggleMusic);
 
-/* Play on first click if blocked */
-document.addEventListener("click", ()=>{
-  music.play().catch(()=>{});
-},{ once:true });
-
-/* Editor unlock */
+// Editor unlock
 function unlockEditor(){
   const code = document.getElementById("editorPassword").value;
   if(code==="kys2"){
     const editable = document.getElementById("editableContent");
     editable.contentEditable="true";
     alert("Editor Mode Unlocked! You can now edit the content directly.");
-  } else {
-    alert("Incorrect code!");
-  }
+  } else { alert("Incorrect code!"); }
 }
 
-/* LocalStorage persistence */
+// LocalStorage persistence
 const editable = document.getElementById("editableContent");
 editable.innerHTML = localStorage.getItem("workText") || editable.innerHTML;
+editable.addEventListener("input", ()=>{ localStorage.setItem("workText", editable.innerHTML); });
 
-editable.addEventListener("input", ()=>{
-  localStorage.setItem("workText", editable.innerHTML);
-});
+// Minecraft Server Info
+async function fetchServerInfo(){
+  const ip="quitmc.playwithbao.com";
+  const port=25565;
+  try{
+    const response = await fetch(`https://api.mcsrvstat.us/2/${ip}:${port}`);
+    const data = await response.json();
+    const statusEl = document.getElementById("serverStatus");
+    const playersEl = document.getElementById("serverPlayers");
+    const motdEl = document.getElementById("serverMOTD");
+
+    if(data.online){
+      statusEl.textContent = "Online ✅";
+      playersEl.textContent = `${data.players?.online||0} / ${data.players?.max||"?"}`;
+      if(data.motd?.clean) motdEl.textContent = "MOTD: " + data.motd.clean.join(" ");
+    } else {
+      statusEl.textContent = "Offline ❌";
+      playersEl.textContent = "-";
+      motdEl.textContent = "";
+    }
+  } catch(err){
+    console.error(err);
+    document.getElementById("serverStatus").textContent="Error ❌";
+    document.getElementById("serverPlayers").textContent="-";
+  }
+}
+fetchServerInfo();
+setInterval(fetchServerInfo,15000);
 </script>
-
 </body>
 </html>
