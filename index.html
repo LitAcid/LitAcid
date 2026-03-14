@@ -117,11 +117,11 @@ Players: <span id="serverPlayers">Loading...</span>
 <!-- Music Player -->
 <div class="music" id="musicPlayerContainer">
   <span class="music-icon" id="musicIcon">▶️</span>
-  <span class="music-name">Chubina</span>
+  <span class="music-name">Background Music</span>
 </div>
 
 <audio id="musicPlayer" loop>
-  <source src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Chubina/Chubina/Chubina.mp3" type="audio/mpeg">
+  <source src="https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3" type="audio/mpeg">
 </audio>
 
 <script>
@@ -171,23 +171,23 @@ const musicIcon = document.getElementById("musicIcon");
 
 function toggleMusic(){
   if(music.paused){
-    music.play();
-    musicIcon.textContent = "⏸️";
+    music.play().then(()=>{ musicIcon.textContent = "⏸️"; })
+      .catch(err => console.error("Music play failed:", err));
   } else {
     music.pause();
     musicIcon.textContent = "▶️";
   }
 }
-document.addEventListener("click", ()=>{ music.play().then(()=>{ musicIcon.textContent = "⏸️"; }).catch(()=>{}); },{ once:true });
+
+// Must interact at least once
 musicContainer.addEventListener("click", toggleMusic);
 
 // Editor unlock
 function unlockEditor(){
   const code = document.getElementById("editorPassword").value;
   if(code==="kys2"){
-    const editable = document.getElementById("editableContent");
-    editable.contentEditable="true";
-    alert("Editor Mode Unlocked! You can now edit the content directly.");
+    document.getElementById("editableContent").contentEditable="true";
+    alert("Editor Mode Unlocked!");
   } else { alert("Incorrect code!"); }
 }
 
@@ -203,21 +203,10 @@ async function fetchServerInfo(){
   try{
     const response = await fetch(`https://api.mcsrvstat.us/2/${ip}:${port}`);
     const data = await response.json();
-    const statusEl = document.getElementById("serverStatus");
-    const playersEl = document.getElementById("serverPlayers");
-    const motdEl = document.getElementById("serverMOTD");
-
-    if(data.online){
-      statusEl.textContent = "Online ✅";
-      playersEl.textContent = `${data.players?.online||0} / ${data.players?.max||"?"}`;
-      if(data.motd?.clean) motdEl.textContent = "MOTD: " + data.motd.clean.join(" ");
-    } else {
-      statusEl.textContent = "Offline ❌";
-      playersEl.textContent = "-";
-      motdEl.textContent = "";
-    }
+    document.getElementById("serverStatus").textContent = data.online ? "Online ✅" : "Offline ❌";
+    document.getElementById("serverPlayers").textContent = data.online ? `${data.players?.online||0} / ${data.players?.max||"?"}` : "-";
+    document.getElementById("serverMOTD").textContent = data.online && data.motd?.clean ? "MOTD: "+data.motd.clean.join(" ") : "";
   } catch(err){
-    console.error(err);
     document.getElementById("serverStatus").textContent="Error ❌";
     document.getElementById("serverPlayers").textContent="-";
   }
@@ -225,5 +214,6 @@ async function fetchServerInfo(){
 fetchServerInfo();
 setInterval(fetchServerInfo,15000);
 </script>
+
 </body>
 </html>
