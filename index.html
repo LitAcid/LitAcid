@@ -117,11 +117,11 @@ Players: <span id="serverPlayers">Loading...</span>
 <!-- Music Player -->
 <div class="music" id="musicPlayerContainer">
   <span class="music-icon" id="musicIcon">▶️</span>
-  <span class="music-name">Background Music</span>
+  <span class="music-name">Pitbull - Meet Me At The Hotel Room (Slowed)</span>
 </div>
 
 <audio id="musicPlayer" loop>
-  <source src="https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3" type="audio/mpeg">
+  <source src="https://managerial-cyan-zl78blye6m.edgeone.app/pitbull_-_meet_me_at_the_hotel_room_slowed_(mp3.pm).mp3" type="audio/mpeg">
 </audio>
 
 <script>
@@ -172,7 +172,7 @@ const musicIcon = document.getElementById("musicIcon");
 function toggleMusic(){
   if(music.paused){
     music.play().then(()=>{ musicIcon.textContent = "⏸️"; })
-      .catch(err => console.error("Music play failed:", err));
+      .catch(err => console.error("Playback failed:", err));
   } else {
     music.pause();
     musicIcon.textContent = "▶️";
