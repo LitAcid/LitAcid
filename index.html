@@ -1,20 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>LitAcid</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
 
-:root{--theme:rgb(255,0,0)}
+:root { --theme: rgb(255,0,0); }
 
 body{
 margin:0;
@@ -24,6 +22,27 @@ font-family:Inter;
 overflow-x:hidden;
 }
 
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:-3;
+}
+
+.fog{
+position:fixed;
+width:200%;
+height:200%;
+background:radial-gradient(circle,rgba(255,255,255,0.03) 0%,transparent 70%);
+animation:fogmove 60s linear infinite;
+z-index:-2;
+}
+
+@keyframes fogmove{
+0%{transform:translate(-20%,-20%)}
+100%{transform:translate(0%,0%)}
+}
+
 header{
 text-align:center;
 padding:60px 20px;
@@ -31,97 +50,88 @@ padding:60px 20px;
 
 header h1{
 font-family:Orbitron;
-font-size:45px;
+font-size:48px;
+letter-spacing:4px;
 color:var(--theme);
-text-shadow:0 0 15px var(--theme);
+text-shadow:0 0 15px var(--theme),0 0 35px var(--theme);
+}
+
+header p{color:#ccc}
+
+#unlockBox{
+position:fixed;
+top:15px;
+left:15px;
+z-index:20;
+display:flex;
+gap:6px;
+}
+
+#unlockBox input,#unlockBox button{
+padding:6px 10px;
+border:none;
+border-radius:6px;
 }
 
 .container{
 display:flex;
-gap:30px;
 justify-content:center;
+gap:35px;
+padding:30px;
 flex-wrap:wrap;
-padding:20px;
 }
 
 .box{
 background:rgba(255,255,255,0.05);
 border:1px solid var(--theme);
-padding:25px;
-border-radius:15px;
+border-radius:20px;
+padding:28px;
 width:280px;
-backdrop-filter:blur(10px);
+backdrop-filter:blur(14px);
+transition:0.3s;
+box-shadow:0 0 20px var(--theme);
 }
+
+.box:hover{
+transform:translateY(-6px);
+}
+
+.server{width:320px}
 
 .button{
 display:block;
 text-align:center;
+padding:12px;
+margin:10px 0;
+border-radius:10px;
 background:white;
 color:black;
-padding:10px;
-margin-top:10px;
-border-radius:8px;
-cursor:pointer;
 text-decoration:none;
-font-weight:bold;
+font-weight:600;
 }
 
-.button:hover{
-background:var(--theme);
-color:white;
-}
-
-#playerList div{
-display:flex;
-align-items:center;
-gap:8px;
-margin-bottom:5px;
-}
-
-#unlockBox{
+#skinButton{
 position:fixed;
-top:10px;
-left:10px;
-}
-
-#songPanel{
-display:none;
-position:fixed;
-top:10px;
-right:10px;
-background:#000a;
-padding:8px;
-border-radius:8px;
+bottom:15px;
+left:15px;
 }
 
 #visitorBox{
 display:none;
 position:fixed;
-bottom:10px;
-right:10px;
-background:#000a;
-padding:8px;
+bottom:15px;
+right:15px;
+background:#0009;
+padding:8px 12px;
 border-radius:8px;
 }
 
-#skinButton{
-position:fixed;
-bottom:10px;
-left:10px;
-}
-
-canvas{
-position:fixed;
-top:0;
-left:0;
-z-index:-1;
-}
-
-@media(max-width:800px){
+@media(max-width:850px){
 
 .container{
 flex-direction:column;
 align-items:center;
+padding-bottom:120px;
 }
 
 .box{
@@ -134,19 +144,17 @@ width:90%;
 </head>
 <body>
 
+<canvas id="rain"></canvas>
+<div class="fog"></div>
+
 <header>
 <h1>LitAcid</h1>
-<p>Minecraft Server</p>
+<p>Minecraft PvP • Server Manager • Game Dev</p>
 </header>
 
 <div id="unlockBox">
-<input id="editorPassword" placeholder="editor code">
+<input type="password" id="editorPassword" placeholder="editor code">
 <button onclick="unlockEditor()">Unlock</button>
-</div>
-
-<div id="songPanel">
-<input id="songURL" placeholder="mp3 url">
-<button onclick="changeSong()">Set Song</button>
 </div>
 
 <div class="container">
@@ -155,245 +163,156 @@ width:90%;
 <h3>Connect</h3>
 <a class="button" href="https://youtube.com/@litacid">YouTube</a>
 <a class="button" href="https://instagram.com/litacid2">Instagram</a>
+<a class="button">Discord: @litacid</a>
 </div>
 
-<div class="box">
-
-<h3>Server</h3>
-
+<div class="box server">
+<h3>Minecraft Server</h3>
 <p>
-IP: <b id="serverIP">quitmc.playwithbao.com</b>
+IP: <b>quitmc.playwithbao.com</b><br>
+Port: 25565
 </p>
 
-<button class="button" onclick="copyIP()">Join Server</button>
+<p>
+Status: <span id="serverStatus">Loading...</span><br>
+Players: <span id="serverPlayers">...</span>
+</p>
 
-<p>Status: <span id="status">...</span></p>
-<p>Players: <span id="players">...</span></p>
+<p id="serverMOTD"></p>
 
 </div>
 
 <div class="box">
-<h3>Online Players</h3>
-<div id="playerList">Loading...</div>
+<h3>What am I working on</h3>
+<div id="editableContent" contenteditable="false">
+Nothing right now.
+</div>
 </div>
 
 </div>
 
-<audio id="music" loop autoplay></audio>
-
-<div id="visitorBox">
-Visitors: <span id="visitorCount">0</span>
-</div>
+<audio id="musicPlayer" autoplay muted loop>
+<source src="https://image2url.com/r2/default/audio/1773480604788-5b579849-e3af-42d9-bfa5-a4f55956d700.mp3" type="audio/mpeg">
+</audio>
 
 <div id="skinButton">
 <a id="downloadSkin" class="button">Download My Skin</a>
 </div>
 
-<canvas id="rain"></canvas>
+<div id="visitorBox">
+Visitors: <span id="visitorCount">0</span>
+</div>
 
 <script>
 
-/* FIREBASE */
+/* FIREBASE CONFIG */
 
 const firebaseConfig={
-apiKey:"YOUR_API",
+apiKey:"YOUR_API_KEY",
 authDomain:"YOUR_PROJECT.firebaseapp.com",
 databaseURL:"https://YOUR_PROJECT.firebaseio.com",
 projectId:"YOUR_PROJECT"
-}
+};
 
 firebase.initializeApp(firebaseConfig)
-
 const db=firebase.database()
 
-/* MUSIC SYSTEM */
+/* MUSIC AUTOPLAY */
 
-const music=document.getElementById("music")
+const music=document.getElementById("musicPlayer")
 
-db.ref("song").on("value",snap=>{
-
-const url=snap.val()
-
-if(!url)return
-
-music.src=url
-music.load()
-
+setTimeout(()=>{
+music.muted=false
 music.play().catch(()=>{})
-
-})
-
-function changeSong(){
-
-const url=document.getElementById("songURL").value
-
-if(!url)return
-
-db.ref("song").set(url)
-
-}
-
-/* EDITOR MODE */
-
-function unlockEditor(){
-
-if(document.getElementById("editorPassword").value==="kys2"){
-
-document.getElementById("songPanel").style.display="block"
-document.getElementById("visitorBox").style.display="block"
-
-}
-
-}
+},2000)
 
 /* VISITOR COUNTER */
 
 const visitRef=db.ref("visits")
 
-visitRef.transaction(v=>(v||0)+1)
+visitRef.transaction(v=>{
+return (v||0)+1
+})
 
 visitRef.on("value",snap=>{
 document.getElementById("visitorCount").textContent=snap.val()
 })
 
+/* EDITOR MODE */
+
+function unlockEditor(){
+if(document.getElementById("editorPassword").value==="kys2"){
+document.getElementById("visitorBox").style.display="block"
+document.getElementById("editableContent").contentEditable=true
+alert("Editor Mode Enabled")
+}
+}
+
 /* SERVER STATUS */
 
-async function server(){
-
+async function fetchServer(){
 try{
-
-const r=await fetch("https://api.mcsrvstat.us/3/quitmc.playwithbao.com")
-
+const r=await fetch("https://mcapi.us/server/status?ip=quitmc.playwithbao.com")
 const d=await r.json()
 
-document.getElementById("status").textContent=d.online?"Online":"Offline"
+document.getElementById("serverStatus").textContent=d.online?"Online":"Offline"
+document.getElementById("serverPlayers").textContent=d.online?`${d.players.now}/${d.players.max}`:"-"
+document.getElementById("serverMOTD").textContent=d.motd||""
 
-document.getElementById("players").textContent=d.players?d.players.online:0
-
-}catch{}
-
+}catch{
+document.getElementById("serverStatus").textContent="Error"
+}
 }
 
-server()
-setInterval(server,15000)
+fetchServer()
+setInterval(fetchServer,15000)
 
-/* PLAYER LIST */
-
-async function players(){
-
-try{
-
-const r=await fetch("https://api.mcsrvstat.us/3/quitmc.playwithbao.com")
-
-const d=await r.json()
-
-const list=document.getElementById("playerList")
-
-if(!d.players||!d.players.list){
-
-list.innerHTML="No players online"
-
-return
-
-}
-
-list.innerHTML=""
-
-d.players.list.forEach(p=>{
-
-const div=document.createElement("div")
-
-div.innerHTML=`<img src="https://mc-heads.net/avatar/${p}/30"> ${p}`
-
-list.appendChild(div)
-
-})
-
-}catch{}
-
-}
-
-players()
-setInterval(players,15000)
-
-/* COPY IP */
-
-function copyIP(){
-
-const ip="quitmc.playwithbao.com"
-
-navigator.clipboard.writeText(ip)
-
-alert("IP copied")
-
-}
-
-/* SKIN DOWNLOAD */
-
-async function skin(){
-
-const uuid=await fetch("https://api.mojang.com/users/profiles/minecraft/litacid").then(r=>r.json())
-
-const data=await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid.id}`).then(r=>r.json())
-
-const tex=JSON.parse(atob(data.properties[0].value))
-
-document.getElementById("downloadSkin").href=tex.textures.SKIN.url
-
-}
-
-skin()
-
-/* RAIN EFFECT */
+/* RAIN */
 
 const canvas=document.getElementById("rain")
-
 const ctx=canvas.getContext("2d")
 
 canvas.width=window.innerWidth
 canvas.height=window.innerHeight
 
 let rain=[]
-
 for(let i=0;i<300;i++){
-
-rain.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height,
-xs:-3+Math.random()*6,
-ys:10+Math.random()*8
-})
-
+rain.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,l:Math.random(),xs:-3+Math.random()*6,ys:8+Math.random()*8})
 }
 
 function drawRain(){
-
 ctx.clearRect(0,0,canvas.width,canvas.height)
-
-ctx.strokeStyle="rgba(255,255,255,0.2)"
-
+ctx.strokeStyle="rgba(255,255,255,0.15)"
 ctx.beginPath()
 
-rain.forEach(r=>{
-
+for(let r of rain){
 ctx.moveTo(r.x,r.y)
-ctx.lineTo(r.x+r.xs,r.y+r.ys)
-
-r.x+=r.xs
-r.y+=r.ys
-
-if(r.y>canvas.height){
-r.y=-10
-r.x=Math.random()*canvas.width
+ctx.lineTo(r.x+r.l*r.xs,r.y+r.l*r.ys)
 }
 
-})
-
 ctx.stroke()
+
+for(let r of rain){
+r.x+=r.xs
+r.y+=r.ys
+if(r.y>canvas.height){
+r.y=-20
+r.x=Math.random()*canvas.width
+}
+}
 
 }
 
 setInterval(drawRain,30)
+
+/* THUNDER */
+
+setInterval(()=>{
+if(Math.random()>0.6){
+document.body.style.background="#222"
+setTimeout(()=>{document.body.style.background="#050505"},120)
+}
+},2500)
 
 /* COLOR CYCLE */
 
@@ -406,10 +325,25 @@ else if(g>0&&r===0){g--;b++}
 else if(b>0&&g===0){b--;r++}
 
 const c=`rgb(${r},${g},${b})`
-
 document.documentElement.style.setProperty("--theme",c)
 
+document.querySelectorAll(".box").forEach(el=>{
+el.style.borderColor=c
+el.style.boxShadow=`0 0 20px ${c}`
+})
+
 },30)
+
+/* SKIN DOWNLOAD */
+
+async function skin(){
+const uuid=await fetch("https://api.mojang.com/users/profiles/minecraft/litacid").then(r=>r.json())
+const data=await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid.id}`).then(r=>r.json())
+const tex=JSON.parse(atob(data.properties[0].value))
+document.getElementById("downloadSkin").href=tex.textures.SKIN.url
+}
+
+skin()
 
 </script>
 
