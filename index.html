@@ -11,56 +11,47 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-:root {
-  --main-theme: #0ff;
-}
+:root { --main-theme: #0ff; }
 
-/* --- Base Styles --- */
-body {
-  margin: 0;
-  background: #050505;
-  color: white;
-  font-family: Inter;
-  overflow: hidden;
+body{
+  margin:0;
+  background:#050505;
+  color:white;
+  font-family:Inter;
+  overflow:hidden;
 }
-canvas { position: fixed; top: 0; left: 0; z-index: -3; }
+canvas{ position:fixed; top:0; left:0; z-index:-3; }
 
-/* --- Fog --- */
-.fog {
-  position: fixed;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
-  animation: fogmove 50s linear infinite;
-  z-index: -2;
+.fog{
+  position:fixed;
+  width:200%;
+  height:200%;
+  background:radial-gradient(circle,rgba(255,255,255,0.03) 0%,transparent 70%);
+  animation:fogmove 50s linear infinite;
+  z-index:-2;
 }
-@keyframes fogmove { 0%{transform:translate(-20%,-20%)} 100%{transform:translate(0%,0%)} }
+@keyframes fogmove{ 0%{transform:translate(-20%,-20%)} 100%{transform:translate(0%,0%)} }
 
-/* --- Header --- */
-header {
-  text-align: center;
-  padding: 70px 20px;
-}
-header h1 {
-  font-family: Orbitron;
-  font-size: 52px;
-  letter-spacing: 5px;
+header{text-align:center;padding:70px 20px;}
+header h1{
+  font-family:Orbitron;
+  font-size:52px;
+  letter-spacing:5px;
   color: var(--main-theme);
-  text-shadow: 0 0 12px var(--main-theme), 0 0 24px var(--main-theme)55;
+  text-shadow:0 0 12px var(--main-theme),0 0 24px var(--main-theme)55;
 }
-header p { font-size: 16px; color: #ccc; }
+header p{ font-size:16px; color:#ccc; }
 
-/* --- Unlock Editor Top-left --- */
-#unlockBox {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 10;
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+#unlockBox{
+  position:fixed;
+  top:20px;
+  left:20px;
+  z-index:10;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
 }
-#unlockBox input, #unlockBox button {
+#unlockBox input,#unlockBox button{
   padding:6px 10px;
   border-radius:6px;
   border:none;
@@ -69,46 +60,43 @@ header p { font-size: 16px; color: #ccc; }
   cursor:pointer;
 }
 
-/* --- Theme Toolbox Top-right --- */
-#themeToolbox {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 11;
-  display: none;
-  background: rgba(0,0,0,0.5);
+#themeToolbox{
+  position:fixed;
+  top:20px;
+  right:20px;
+  z-index:11;
+  display:none;
+  background:rgba(0,0,0,0.5);
   padding:6px;
   border-radius:6px;
 }
-#themeToolbox span { color:white; font-size:14px; }
-#themeToolbox div { display:flex; gap:4px; margin-top:4px; }
+#themeToolbox span{ color:white; font-size:14px; }
+#themeToolbox div{ display:flex; gap:4px; margin-top:4px; }
 
-/* --- Container Boxes --- */
-.container {
+.container{
   display:flex;
   justify-content:center;
   gap:40px;
   padding:40px;
   flex-wrap:wrap;
 }
-.box {
+.box{
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--main-theme);
   border-radius: 20px;
   padding: 30px;
-  width: 280px;
+  width:280px;
   backdrop-filter: blur(15px);
   transition: 0.4s;
   box-shadow: 0 0 20px var(--main-theme)30;
 }
-.box:hover {
-  transform: translateY(-8px);
+.box:hover{
+  transform:translateY(-8px);
   box-shadow: 0 0 35px var(--main-theme)50;
 }
-.server { width: 340px; }
+.server{ width:340px; }
 
-/* --- Buttons --- */
-.button {
+.button{
   display:block;
   text-align:center;
   padding:12px;
@@ -119,31 +107,28 @@ header p { font-size: 16px; color: #ccc; }
   text-decoration:none;
   font-weight:600;
   transition:0.3s;
-  box-shadow: 0 0 10px var(--main-theme)30;
+  box-shadow:0 0 10px var(--main-theme)30;
 }
-.button:hover {
+.button:hover{
   background: var(--main-theme);
-  color: #050505;
-  transform: scale(1.05);
-  box-shadow: 0 0 25px var(--main-theme);
+  color:#050505;
+  transform:scale(1.05);
+  box-shadow:0 0 25px var(--main-theme);
 }
 
-/* --- Editable Content --- */
-#editableContent { min-height: 80px; outline:none; }
+#editableContent{ min-height:80px; outline:none; }
 
-/* --- Skin Button Bottom-left --- */
-#skinButton {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  z-index: 10;
+#skinButton{
+  position:fixed;
+  bottom:20px;
+  left:20px;
+  z-index:10;
 }
-#skinButton .button { padding:8px 12px; font-size:14px; }
+#skinButton .button{ padding:8px 12px; font-size:14px; }
 
-/* --- Responsive --- */
 @media(max-width:850px){
-  .container { flex-direction: column; align-items:center; }
-  .server { order: -1; }
+  .container{ flex-direction:column; align-items:center; }
+  .server{ order:-1; }
 }
 </style>
 </head>
@@ -157,21 +142,17 @@ header p { font-size: 16px; color: #ccc; }
 <p>Minecraft PvP • Server Manager • Game Dev</p>
 </header>
 
-<!-- Unlock Editor Box -->
 <div id="unlockBox">
   <input type="password" id="editorPassword" placeholder="Enter code to unlock editor">
   <button onclick="unlockEditor()">Unlock Editor Mode</button>
 </div>
 
-<!-- Theme Toolbox -->
 <div id="themeToolbox">
   <span>🎨 Theme:</span>
   <div id="themeSwatches"></div>
 </div>
 
-<!-- Boxes -->
 <div class="container">
-  <!-- Social -->
   <div class="box">
     <h3>Connect With Me</h3>
     <a class="button" href="https://youtube.com/@litacid?si=DkSOiWLQn-48c3km">YouTube</a>
@@ -179,7 +160,6 @@ header p { font-size: 16px; color: #ccc; }
     <a class="button">Discord: @litacid</a>
   </div>
 
-  <!-- Server Info -->
   <div class="box server">
     <h3>Minecraft Server</h3>
     <p>IP: <b id="serverIP">quitmc.playwithbao.com</b><br>
@@ -189,7 +169,6 @@ header p { font-size: 16px; color: #ccc; }
     <p id="serverMOTD"></p>
   </div>
 
-  <!-- Work Box -->
   <div class="box" id="workBox">
     <h3>What am I working on rn</h3>
     <div id="editableContent" contenteditable="false">
@@ -198,12 +177,10 @@ header p { font-size: 16px; color: #ccc; }
   </div>
 </div>
 
-<!-- Hidden Music -->
 <audio id="musicPlayer" loop>
   <source src="https://image2url.com/r2/default/audio/1773480604788-5b579849-e3af-42d9-bfa5-a4f55956d700.mp3">
 </audio>
 
-<!-- Skin Download Button -->
 <div id="skinButton">
   <a id="downloadSkin" href="#" download="litacid_skin.png" class="button">Download My Skin</a>
 </div>
@@ -222,81 +199,48 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// --- Rain & Particles ---
-const canvas = document.getElementById("rain");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let rain = [];
-for(let i=0;i<400;i++){
-  rain.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, l: Math.random()*1.2, xs: -2+Math.random()*4, ys: 8+Math.random()*10 });
-}
-
-function drawRain(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle="rgba(0,255,255,0.15)";
-  ctx.lineWidth=1;
-  ctx.beginPath();
-  for(let r of rain){ ctx.moveTo(r.x,r.y); ctx.lineTo(r.x+r.l*r.xs,r.y+r.l*r.ys); }
-  ctx.stroke();
-  moveRain();
-}
+// --- Rain ---
+const canvas=document.getElementById("rain"),ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+let rain=[];
+for(let i=0;i<400;i++){ rain.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,l:Math.random()*1.2,xs:-2+Math.random()*4,ys:8+Math.random()*10}); }
+function drawRain(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.strokeStyle="rgba(0,255,255,0.15)"; ctx.lineWidth=1; ctx.beginPath(); for(let r of rain){ ctx.moveTo(r.x,r.y); ctx.lineTo(r.x+r.l*r.xs,r.y+r.l*r.ys); } ctx.stroke(); moveRain(); }
 function moveRain(){ for(let r of rain){ r.x+=r.xs; r.y+=r.ys; if(r.x>canvas.width||r.y>canvas.height){ r.x=Math.random()*canvas.width; r.y=-20; } } }
 setInterval(drawRain,30);
 
 // Thunder flashes
 setInterval(()=>{ if(Math.random()>0.92){ document.body.style.background="#111"; setTimeout(()=>{document.body.style.background="#050505";},120) } },4000);
 
-// Music autoplay after first click
-const music = document.getElementById("musicPlayer");
-document.addEventListener('click',()=>{ music.play().catch(()=>{}); document.removeEventListener('click', arguments.callee); });
+// Music autoplay
+const music=document.getElementById("musicPlayer");
+document.addEventListener('click',()=>{ music.play().catch(()=>{}); document.removeEventListener('click',arguments.callee); });
 
-// --- Editor Unlock + Theme Palette ---
-const themeToolbox = document.getElementById("themeToolbox");
-const themeSwatches = document.getElementById("themeSwatches");
-const colors = ["#0ff","#ff0","#f0f","#0f0","#f00","#00f","#fff","#0aa"];
-
-colors.forEach(c=>{
-  const swatch = document.createElement("div");
-  swatch.style.width="24px"; swatch.style.height="24px"; swatch.style.borderRadius="4px";
-  swatch.style.cursor="pointer"; swatch.style.background=c; swatch.title=c;
-  swatch.addEventListener("click",()=>changeTheme(c));
-  themeSwatches.appendChild(swatch);
-});
+// --- Theme Palette ---
+const themeToolbox=document.getElementById("themeToolbox");
+const themeSwatches=document.getElementById("themeSwatches");
+const colors=["#0ff","#ff0","#f0f","#0f0","#f00","#00f","#fff","#0aa"];
+colors.forEach(c=>{ const swatch=document.createElement("div"); swatch.style.width="24px"; swatch.style.height="24px"; swatch.style.borderRadius="4px"; swatch.style.cursor="pointer"; swatch.style.background=c; swatch.title=c; swatch.addEventListener("click",()=>changeTheme(c)); themeSwatches.appendChild(swatch); });
 
 function unlockEditor(){
-  const code = document.getElementById("editorPassword").value;
-  if(code==="kys2"){
-    document.getElementById("editableContent").contentEditable="true";
-    alert("Editor Mode Unlocked!");
-    themeToolbox.style.display = "flex";
-  } else alert("Incorrect code!");
+  const code=document.getElementById("editorPassword").value;
+  if(code==="kys2"){ document.getElementById("editableContent").contentEditable="true"; alert("Editor Mode Unlocked!"); themeToolbox.style.display="flex"; } else alert("Incorrect code!");
 }
-
 function applyTheme(color){
-  document.documentElement.style.setProperty('--main-theme', color);
-  document.querySelectorAll('.box,.button').forEach(el=>{
-    el.style.borderColor=color;
-    el.style.boxShadow=`0 0 20px ${color}30`;
-  });
+  document.documentElement.style.setProperty('--main-theme',color);
+  document.querySelectorAll('.box,.button').forEach(el=>{ el.style.borderColor=color; el.style.boxShadow=`0 0 20px ${color}30`; });
   document.querySelector('header h1').style.textShadow=`0 0 12px ${color},0 0 24px ${color}55`;
 }
+function changeTheme(color){ applyTheme(color); db.ref('theme/color').set(color); }
+db.ref('theme/color').on('value',snapshot=>{ const color=snapshot.val()||"#0ff"; applyTheme(color); });
 
-// Change theme locally + update Firebase
-function changeTheme(color){ applyTheme(color); db.ref('theme').set({color:color}); }
+// --- LocalStorage Work Box ---
+const editable=document.getElementById("editableContent");
+editable.innerHTML=localStorage.getItem("workText")||editable.innerHTML;
+editable.addEventListener("input",()=>{ localStorage.setItem("workText",editable.innerHTML); });
 
-// Fetch theme from Firebase live
-db.ref('theme/color').on('value', snapshot=>{ const color=snapshot.val()||"#0ff"; applyTheme(color); });
-
-// --- LocalStorage for Work Box ---
-const editable = document.getElementById("editableContent");
-editable.innerHTML = localStorage.getItem("workText") || editable.innerHTML;
-editable.addEventListener("input", ()=>{ localStorage.setItem("workText", editable.innerHTML); });
-
-// --- Fetch Minecraft Server Info ---
+// --- Minecraft Server Info ---
 async function fetchServerInfo(){
-  const ip="quitmc.playwithbao.com", port=25565;
+  const ip="quitmc.playwithbao.com",port=25565;
   try{
     const res=await fetch(`https://mcapi.us/server/status?ip=${ip}&port=${port}`);
     const data=await res.json();
@@ -307,7 +251,7 @@ async function fetchServerInfo(){
 }
 fetchServerInfo(); setInterval(fetchServerInfo,15000);
 
-// --- Fetch Skin & Set Download ---
+// --- Minecraft Skin Download ---
 async function setSkinDownload(){
   try{
     const username="litacid";
