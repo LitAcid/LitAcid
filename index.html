@@ -169,18 +169,19 @@ const music = document.getElementById("musicPlayer");
 const musicContainer = document.getElementById("musicPlayerContainer");
 const musicIcon = document.getElementById("musicIcon");
 
-function toggleMusic(){
-  if(music.paused){
-    music.play().then(()=>{ musicIcon.textContent = "⏸️"; })
-      .catch(err => console.error("Playback failed:", err));
-  } else {
-    music.pause();
-    musicIcon.textContent = "▶️";
-  }
+// Play music on first interaction automatically
+function startMusicOnce() {
+  music.play().then(()=>{ musicIcon.textContent="⏸️"; })
+    .catch(err=>console.error("Playback failed:", err));
+  document.removeEventListener('click', startMusicOnce);
 }
+document.addEventListener('click', startMusicOnce);
 
-// Must interact at least once
-musicContainer.addEventListener("click", toggleMusic);
+// Toggle play/pause manually
+musicContainer.addEventListener("click", () => {
+  if(music.paused){ music.play().then(()=>musicIcon.textContent="⏸️"); }
+  else { music.pause(); musicIcon.textContent="▶️"; }
+});
 
 // Editor unlock
 function unlockEditor(){
