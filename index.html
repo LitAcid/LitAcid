@@ -8,15 +8,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
 
 <style>
-body{
+body {
   margin:0;
   background:#050505;
   color:white;
   font-family:Inter;
   overflow:hidden;
 }
-canvas{ position:fixed; top:0; left:0; z-index:-2; }
-.fog{
+canvas { position:fixed; top:0; left:0; z-index:-2; }
+
+.fog {
   position:fixed;
   width:200%;
   height:200%;
@@ -24,25 +25,84 @@ canvas{ position:fixed; top:0; left:0; z-index:-2; }
   animation:fogmove 40s linear infinite;
   z-index:-1;
 }
-@keyframes fogmove{ 0%{transform:translate(-20%,-20%)} 100%{transform:translate(0%,0%)} }
-header{text-align:center;padding:70px 20px;}
-header h1{font-family:Orbitron;font-size:48px;letter-spacing:4px;}
+@keyframes fogmove { 0%{transform:translate(-20%,-20%)} 100%{transform:translate(0%,0%)} }
 
-/* Unlock editor */
-#unlockBox { text-align:center;margin-bottom:20px; }
-#unlockBox input { padding:6px 8px; border-radius:6px; border:none; outline:none; margin-right:6px; }
-#unlockBox button { padding:6px 10px; border-radius:6px; border:none; cursor:pointer; background:white; color:black; font-weight:600; }
+header {text-align:center;padding:70px 20px;}
+header h1 {font-family:Orbitron;font-size:48px;letter-spacing:4px;}
+
+/* Unlock editor (top-left) */
+#unlockBox {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  text-align: left;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+#unlockBox input, #unlockBox button {
+  padding:6px 8px;
+  border-radius:6px;
+  border:none;
+  outline:none;
+  font-size:14px;
+  cursor:pointer;
+}
 
 /* Layout */
-.container{ display:flex; justify-content:center; gap:40px; padding:40px; flex-wrap:wrap; }
-.box{ background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:30px; width:260px; backdrop-filter:blur(12px); transition:0.4s; }
-.box:hover{ transform:translateY(-6px); box-shadow:0 0 25px rgba(255,255,255,0.08); }
-.server{ width:320px; border:1px solid rgba(255,255,255,0.3); box-shadow:0 0 25px rgba(255,255,255,0.1); }
-.button{ display:block; text-align:center; padding:12px; margin:12px 0; border-radius:12px; background:white; color:black; text-decoration:none; font-weight:600; transition:0.3s; }
-.button:hover{ background:#dcdcdc; transform:scale(1.04); }
-#editableContent{ min-height:80px; outline:none; }
+.container {
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  padding:40px;
+  flex-wrap:wrap;
+}
+.box {
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:30px;
+  width:260px;
+  backdrop-filter:blur(12px);
+  transition:0.4s;
+}
+.box:hover {
+  transform:translateY(-6px);
+  box-shadow:0 0 25px rgba(255,255,255,0.08);
+}
+.server {
+  width:320px;
+  border:1px solid rgba(255,255,255,0.3);
+  box-shadow:0 0 25px rgba(255,255,255,0.1);
+}
+.button {
+  display:block;
+  text-align:center;
+  padding:12px;
+  margin:12px 0;
+  border-radius:12px;
+  background:white;
+  color:black;
+  text-decoration:none;
+  font-weight:600;
+  transition:0.3s;
+}
+.button:hover {
+  background:#dcdcdc;
+  transform:scale(1.04);
+}
 
-@media(max-width:850px){ .container{ flex-direction:column; align-items:center; } .server{ order:-1; } }
+#editableContent { min-height:80px; outline:none; }
+
+@media(max-width:850px) { 
+  .container { flex-direction:column; align-items:center; } 
+  .server { order:-1; } 
+}
+#skinButton .button {
+  padding:8px 12px;
+  font-size:14px;
+}
 </style>
 </head>
 <body>
@@ -63,35 +123,35 @@ header h1{font-family:Orbitron;font-size:48px;letter-spacing:4px;}
 
 <div class="container">
 
-<!-- Social -->
-<div class="box">
-<h3>Connect With Me</h3>
-<a class="button" href="https://youtube.com/@litacid?si=DkSOiWLQn-48c3km">YouTube</a>
-<a class="button" href="https://instagram.com/litacid2">Instagram</a>
-<a class="button">Discord: @litacid</a>
-</div>
+  <!-- Social -->
+  <div class="box">
+    <h3>Connect With Me</h3>
+    <a class="button" href="https://youtube.com/@litacid?si=DkSOiWLQn-48c3km">YouTube</a>
+    <a class="button" href="https://instagram.com/litacid2">Instagram</a>
+    <a class="button">Discord: @litacid</a>
+  </div>
 
-<!-- Server -->
-<div class="box server">
-<h3>Minecraft Server</h3>
-<p>
-IP: <b id="serverIP">quitmc.playwithbao.com</b><br>
-Port: <span id="serverPort">25565</span>
-</p>
-<p>
-Status: <span id="serverStatus">Loading...</span><br>
-Players: <span id="serverPlayers">Loading...</span>
-</p>
-<p id="serverMOTD"></p>
-</div>
+  <!-- Server -->
+  <div class="box server">
+    <h3>Minecraft Server</h3>
+    <p>
+      IP: <b id="serverIP">quitmc.playwithbao.com</b><br>
+      Port: <span id="serverPort">25565</span>
+    </p>
+    <p>
+      Status: <span id="serverStatus">Loading...</span><br>
+      Players: <span id="serverPlayers">Loading...</span>
+    </p>
+    <p id="serverMOTD"></p>
+  </div>
 
-<!-- What am I working on box -->
-<div class="box" id="workBox">
-<h3>What am I working on rn</h3>
-<div id="editableContent" contenteditable="false">
-<p>Nothing for now, just chilling.</p>
-</div>
-</div>
+  <!-- Work box -->
+  <div class="box" id="workBox">
+    <h3>What am I working on rn</h3>
+    <div id="editableContent" contenteditable="false">
+      <p>Nothing for now, just chilling.</p>
+    </div>
+  </div>
 
 </div>
 
@@ -100,13 +160,18 @@ Players: <span id="serverPlayers">Loading...</span>
   <source src="https://image2url.com/r2/default/audio/1773480604788-5b579849-e3af-42d9-bfa5-a4f55956d700.mp3">
 </audio>
 
+<!-- Skin download button (bottom-left) -->
+<div id="skinButton">
+  <a id="downloadSkin" href="#" download="litacid_skin.png" class="button">Download My Skin</a>
+</div>
+
 <script>
 // Rain animation
-const canvas=document.getElementById("rain");
-const ctx=canvas.getContext("2d");
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-let rain=[];
+const canvas = document.getElementById("rain");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let rain = [];
 for(let i=0;i<300;i++){
   rain.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, l:Math.random()*1, xs:-4+Math.random()*4, ys:8+Math.random()*10});
 }
@@ -140,7 +205,7 @@ setInterval(()=>{
   }
 },4000);
 
-// Auto-play music after first click anywhere
+// Auto-play music after first click
 const music = document.getElementById("musicPlayer");
 function startMusicOnce(){
   music.play().catch(err=>console.error(err));
@@ -188,6 +253,29 @@ async function fetchServerInfo(){
 }
 fetchServerInfo();
 setInterval(fetchServerInfo,15000);
+
+// Fetch Minecraft skin and set download link
+async function setSkinDownload(){
+  const username = "litacid";
+  try{
+    const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+    const data = await res.json();
+    const uuid = data.id;
+
+    const profileRes = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`);
+    const profileData = await profileRes.json();
+    const skinProp = profileData.properties.find(p => p.name === "textures");
+    const skinJSON = JSON.parse(atob(skinProp.value));
+    const skinURL = skinJSON.textures.SKIN.url;
+
+    const downloadLink = document.getElementById("downloadSkin");
+    downloadLink.href = skinURL;
+
+  } catch(err){
+    console.error("Could not fetch skin:", err);
+  }
+}
+setSkinDownload();
 </script>
 
 </body>
