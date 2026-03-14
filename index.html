@@ -162,18 +162,28 @@ const editable = document.getElementById("editableContent");
 editable.innerHTML = localStorage.getItem("workText") || editable.innerHTML;
 editable.addEventListener("input", ()=>{ localStorage.setItem("workText", editable.innerHTML); });
 
-// Minecraft Server Info using mcstatus.io
+// Minecraft Server Info using mcapi.us
 async function fetchServerInfo(){
-  const ip="quitmc.playwithbao.com";
+  const ip = "quitmc.playwithbao.com";
+  const port = 25565;
   try{
-    const response = await fetch(`https://api.mcstatus.io/v2/status/java/${ip}`);
+    const response = await fetch(`https://mcapi.us/server/status?ip=${ip}&port=${port}`);
     const data = await response.json();
-    document.getElementById("serverStatus").textContent = data.online ? "Online ✅" : "Offline ❌";
-    document.getElementById("serverPlayers").textContent = data.online ? `${data.players?.online || 0} / ${data.players?.max || "?"}` : "-";
-    document.getElementById("serverMOTD").textContent = data.motd?.clean ? "MOTD: "+data.motd.clean.join(" ") : "";
+
+    document.getElementById("serverStatus").textContent =
+      data.online ? "Online ✅" : "Offline ❌";
+
+    document.getElementById("serverPlayers").textContent =
+      data.online ? `${data.players.now || 0} / ${data.players.max || "?"}` : "-";
+
+    document.getElementById("serverMOTD").textContent =
+      data.online && data.motd ? `MOTD: ${data.motd}` : "";
+
   } catch(err){
-    document.getElementById("serverStatus").textContent="Error ❌";
-    document.getElementById("serverPlayers").textContent="-";
+    console.error("Error fetching server info:", err);
+    document.getElementById("serverStatus").textContent = "Error ❌";
+    document.getElementById("serverPlayers").textContent = "-";
+    document.getElementById("serverMOTD").textContent = "";
   }
 }
 fetchServerInfo();
