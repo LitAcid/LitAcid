@@ -3,13 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>LitAcid</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
 
 <style>
-
 body{
   margin:0;
   background:#050505;
@@ -35,7 +33,6 @@ canvas{
   animation:fogmove 40s linear infinite;
   z-index:-1;
 }
-
 @keyframes fogmove{
   0%{transform:translate(-20%,-20%)}
   100%{transform:translate(0%,0%)}
@@ -46,7 +43,6 @@ header{
   text-align:center;
   padding:70px 20px;
 }
-
 header h1{
   font-family:Orbitron;
   font-size:48px;
@@ -94,7 +90,6 @@ header h1{
   backdrop-filter:blur(12px);
   transition:0.4s;
 }
-
 .box:hover{
   transform:translateY(-6px);
   box-shadow:0 0 25px rgba(255,255,255,0.08);
@@ -120,7 +115,6 @@ header h1{
   font-weight:600;
   transition:0.3s;
 }
-
 .button:hover{
   background:#dcdcdc;
   transform:scale(1.04);
@@ -140,6 +134,7 @@ header h1{
 /* Editable content */
 #editableContent{
   min-height:80px;
+  outline:none;
 }
 
 /* Mobile */
@@ -152,7 +147,6 @@ header h1{
     order:-1;
   }
 }
-
 </style>
 </head>
 
@@ -206,25 +200,21 @@ Players: Loading...
 </div>
 
 <!-- Music -->
-<div class="music" onclick="toggleMusic()">
-🎵 Play / Pause Music
-</div>
+<div class="music" onclick="toggleMusic()">🎵 Play / Pause Music</div>
 
-<audio id="music" loop>
-<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5dcb5c1d20.mp3">
+<audio id="musicPlayer" loop>
+  <!-- Replace this URL with your Chubina mp3 link -->
+  <source src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Chubina/Chubina/Chubina.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-
-/* Wind rain */
+/* Rain animation */
 const canvas=document.getElementById("rain");
 const ctx=canvas.getContext("2d");
-
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
 
 let rain=[];
-
 for(let i=0;i<300;i++){
   rain.push({
     x:Math.random()*canvas.width,
@@ -269,29 +259,43 @@ setInterval(()=>{
     document.body.style.background="#111";
     setTimeout(()=>{document.body.style.background="#050505";},120)
   }
-},4000)
+},4000);
 
 /* Music */
+const music = document.getElementById("musicPlayer");
+
 function toggleMusic(){
-  let m=document.getElementById("music");
-  if(m.paused){
-    m.play();
-  }else{
-    m.pause();
+  if(music.paused){
+    music.play();
+  } else {
+    music.pause();
   }
 }
 
+/* Play on first click if blocked */
+document.addEventListener("click", ()=>{
+  music.play().catch(()=>{});
+},{ once:true });
+
 /* Editor unlock */
 function unlockEditor(){
-  const code=document.getElementById("editorPassword").value;
+  const code = document.getElementById("editorPassword").value;
   if(code==="kys2"){
-    document.getElementById("editableContent").contentEditable="true";
+    const editable = document.getElementById("editableContent");
+    editable.contentEditable="true";
     alert("Editor Mode Unlocked! You can now edit the content directly.");
-  } else{
+  } else {
     alert("Incorrect code!");
   }
 }
 
+/* LocalStorage persistence */
+const editable = document.getElementById("editableContent");
+editable.innerHTML = localStorage.getItem("workText") || editable.innerHTML;
+
+editable.addEventListener("input", ()=>{
+  localStorage.setItem("workText", editable.innerHTML);
+});
 </script>
 
 </body>
