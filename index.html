@@ -66,7 +66,6 @@ cursor:pointer;
 #visitorBox{display:none;position:fixed;bottom:20px;right:20px;background:#0009;padding:8px 12px;border-radius:8px}
 
 .lightning{position:fixed;top:0;left:0;width:100%;height:100%;background:white;opacity:0;pointer-events:none}
-
 </style>
 </head>
 
@@ -121,12 +120,8 @@ Nothing right now.
 
 </div>
 
-<audio id="music" autoplay loop muted>
-<source src="https://dl.muzking.net/files/track/2021/08/fumflowie-little-dark-age-x-washing-machine-heart.mp3">
-</audio>
-
-<audio id="thunderSound">
-<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6edb7f0c2e.mp3">
+<audio id="music" loop preload="auto">
+<source src="https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3">
 </audio>
 
 <div id="visitorBox">
@@ -145,7 +140,7 @@ projectId:"YOUR_PROJECT"
 firebase.initializeApp(firebaseConfig)
 const db=firebase.database()
 
-/* EDITOR SAVE */
+/* EDITOR */
 const editor=document.getElementById("editableContent")
 
 function unlockEditor(){
@@ -192,7 +187,7 @@ playerList.innerHTML=d.players?.list
 fetchServer()
 setInterval(fetchServer,15000)
 
-/* AUDIO SYSTEM (FIXED) */
+/* 🔥 PERFECT AUDIO SYSTEM */
 const music=document.getElementById("music")
 
 const ctxAudio=new (window.AudioContext||window.webkitAudioContext)()
@@ -208,22 +203,23 @@ function startAudio(){
 if(started) return
 started=true
 
+ctxAudio.resume().then(()=>{
+music.currentTime=0
+music.volume=1
 music.muted=false
-music.play().catch(()=>{})
 
-if(ctxAudio.state==="suspended"){
-ctxAudio.resume()
-}
-
+music.play().then(()=>{
 drawVisualizer()
+}).catch(err=>{
+console.log("Play failed:", err)
+})
+})
 }
 
-/* TRIGGER ON EVERYTHING */
-["click","keydown","scroll","touchstart","mousemove"].forEach(e=>{
-window.addEventListener(e,startAudio,{once:true})
-})
+/* GUARANTEED TRIGGER */
+window.addEventListener("click", startAudio)
 
-/* VISUALIZER + COLOR */
+/* VISUALIZER */
 const vcanvas=document.getElementById("visualizer")
 const vctx=vcanvas.getContext("2d")
 
@@ -251,13 +247,13 @@ x+=barWidth+1
 total+=v
 })
 
-smooth = smooth*0.8 + (total/data.length)*0.2
+smooth = smooth*0.85 + (total/data.length)*0.15
 
 const red=Math.min(255,smooth*2)
 const glow=smooth/255
 
 document.documentElement.style.setProperty("--theme",`rgb(${red},0,0)`)
-document.body.style.boxShadow=`inset 0 0 ${50+smooth}px rgba(${red},0,0,${glow})`
+document.body.style.boxShadow=`inset 0 0 ${60+smooth}px rgba(${red},0,0,${glow})`
 }
 
 /* RAIN */
@@ -298,17 +294,6 @@ r.x=Math.random()*rainCanvas.width
 rctx.strokeStyle="rgba(255,255,255,0.15)"
 rctx.stroke()
 },30)
-
-/* LIGHTNING */
-setInterval(()=>{
-if(Math.random()>0.7){
-lightning.style.opacity="0.8"
-setTimeout(()=>{
-lightning.style.opacity="0"
-thunderSound.play()
-},120)
-}
-},4000)
 
 </script>
 
