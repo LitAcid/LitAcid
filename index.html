@@ -13,7 +13,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-:root{--theme:#ff0000}
+:root{--theme:rgb(255,0,0)}
 
 body{
 margin:0;
@@ -21,13 +21,20 @@ background:#050505;
 color:white;
 font-family:Inter;
 overflow-x:hidden;
+transition:0.2s;
 }
 
 canvas{position:fixed;top:0;left:0;z-index:-3}
-#visualizer{position:fixed;bottom:0;width:100%;height:120px;z-index:-2;opacity:.5}
+#visualizer{position:fixed;bottom:0;width:100%;height:120px;z-index:-2;opacity:.6}
 
 header{text-align:center;padding:60px 20px}
-header h1{font-family:Orbitron;font-size:48px;color:var(--theme);text-shadow:0 0 20px var(--theme)}
+header h1{
+font-family:Orbitron;
+font-size:48px;
+color:var(--theme);
+text-shadow:0 0 20px var(--theme);
+transition:0.2s;
+}
 
 .container{display:flex;justify-content:center;gap:35px;padding:30px;flex-wrap:wrap}
 
@@ -39,6 +46,7 @@ padding:28px;
 width:280px;
 backdrop-filter:blur(14px);
 box-shadow:0 0 20px var(--theme);
+transition:0.2s;
 }
 
 .server{width:320px}
@@ -98,7 +106,7 @@ cursor:pointer;
 <h3>Minecraft Server</h3>
 
 <p>
-IP: <b id="serverIP">quitmc.playwithbao.com</b>
+IP: <b>quitmc.playwithbao.com</b>
 <button onclick="copyIP()">Copy</button>
 </p>
 
@@ -123,7 +131,7 @@ Nothing right now.
 </div>
 
 <audio id="music" autoplay loop muted>
-<source src="https://image2url.com/r2/default/audio/1773480604788-5b579849-e3af-42d9-bfa5-a4f55956d700.mp3">
+<source src="https://dl.muzking.net/files/track/2021/08/fumflowie-little-dark-age-x-washing-machine-heart.mp3">
 </audio>
 
 <audio id="thunderSound">
@@ -146,7 +154,7 @@ projectId:"YOUR_PROJECT"
 firebase.initializeApp(firebaseConfig)
 const db=firebase.database()
 
-/* EDITOR + SAVE SYSTEM */
+/* EDITOR */
 const editor=document.getElementById("editableContent")
 
 function unlockEditor(){
@@ -155,34 +163,30 @@ editor.contentEditable=true
 document.getElementById("visitorBox").style.display="block"
 alert("Editor Enabled")
 
-// SAVE ON CHANGE
 editor.addEventListener("input",()=>{
 db.ref("site/content").set(editor.innerHTML)
 })
 }
 }
 
-// LOAD FOR EVERYONE
 db.ref("site/content").on("value",snap=>{
-if(snap.val()){
-editor.innerHTML=snap.val()
-}
+if(snap.val()) editor.innerHTML=snap.val()
 })
 
-/* VISIT COUNTER */
+/* VISITS */
 const visitRef=db.ref("visits")
 visitRef.transaction(v=>(v||0)+1)
 visitRef.on("value",snap=>{
 document.getElementById("visitorCount").textContent=snap.val()
 })
 
-/* COPY IP */
+/* COPY */
 function copyIP(){
 navigator.clipboard.writeText("quitmc.playwithbao.com")
 alert("IP Copied")
 }
 
-/* SERVER STATUS */
+/* SERVER */
 async function fetchServer(){
 const r=await fetch("https://api.mcsrvstat.us/3/quitmc.playwithbao.com")
 const d=await r.json()
@@ -206,9 +210,8 @@ playerList.innerHTML="No players online"
 fetchServer()
 setInterval(fetchServer,15000)
 
-/* MUSIC FIX (WORKS EVERYWHERE) */
+/* MUSIC FIX */
 const music=document.getElementById("music")
-
 music.play().catch(()=>{})
 
 document.addEventListener("click",()=>{
@@ -216,7 +219,7 @@ music.muted=false
 music.play()
 },{once:true})
 
-/* VISUALIZER */
+/* AUDIO VISUALIZER + COLOR REACTIVE */
 const ctxAudio=new AudioContext()
 const analyser=ctxAudio.createAnalyser()
 const source=ctxAudio.createMediaElementSource(music)
@@ -230,6 +233,8 @@ const vctx=vcanvas.getContext("2d")
 vcanvas.width=window.innerWidth
 vcanvas.height=120
 
+let smooth=0
+
 function drawVisualizer(){
 requestAnimationFrame(drawVisualizer)
 
@@ -238,6 +243,7 @@ analyser.getByteFrequencyData(data)
 
 vctx.clearRect(0,0,vcanvas.width,vcanvas.height)
 
+let total=0
 let x=0
 const barWidth=vcanvas.width/data.length
 
@@ -245,7 +251,18 @@ data.forEach(v=>{
 vctx.fillStyle="cyan"
 vctx.fillRect(x,vcanvas.height-v/2,barWidth,v/2)
 x+=barWidth+1
+total+=v
 })
+
+/* SMOOTH INTENSITY */
+smooth = smooth*0.8 + (total/data.length)*0.2
+
+const red = Math.min(255, smooth*2)
+const glow = smooth/255
+
+document.documentElement.style.setProperty("--theme", `rgb(${red},0,0)`)
+
+document.body.style.boxShadow = `inset 0 0 ${50+smooth}px rgba(${red},0,0,${glow})`
 }
 
 music.addEventListener("play",()=>{
