@@ -33,7 +33,6 @@ font-family:Orbitron;
 font-size:48px;
 color:var(--theme);
 text-shadow:0 0 20px var(--theme);
-transition:0.2s;
 }
 
 .container{display:flex;justify-content:center;gap:35px;padding:30px;flex-wrap:wrap}
@@ -46,7 +45,6 @@ padding:28px;
 width:280px;
 backdrop-filter:blur(14px);
 box-shadow:0 0 20px var(--theme);
-transition:0.2s;
 }
 
 .server{width:320px}
@@ -69,10 +67,6 @@ cursor:pointer;
 
 .lightning{position:fixed;top:0;left:0;width:100%;height:100%;background:white;opacity:0;pointer-events:none}
 
-@media(max-width:850px){
-.container{flex-direction:column;align-items:center}
-.box{width:90%}
-}
 </style>
 </head>
 
@@ -85,7 +79,6 @@ cursor:pointer;
 
 <canvas id="rain"></canvas>
 <canvas id="visualizer"></canvas>
-
 <div id="lightning" class="lightning"></div>
 
 <header>
@@ -97,8 +90,8 @@ cursor:pointer;
 
 <div class="box">
 <h3>Connect</h3>
-<a class="button" href="https://youtube.com/@litacid">YouTube</a>
-<a class="button" href="https://instagram.com/litacid2">Instagram</a>
+<a class="button" href="#">YouTube</a>
+<a class="button" href="#">Instagram</a>
 <div class="button">Discord: @litacid</div>
 </div>
 
@@ -116,8 +109,6 @@ Players: <span id="serverPlayers">...</span>
 </p>
 
 <p id="serverMOTD"></p>
-
-<h4>Online Players</h4>
 <div id="playerList">Loading...</div>
 </div>
 
@@ -154,14 +145,13 @@ projectId:"YOUR_PROJECT"
 firebase.initializeApp(firebaseConfig)
 const db=firebase.database()
 
-/* EDITOR */
+/* EDITOR SAVE */
 const editor=document.getElementById("editableContent")
 
 function unlockEditor(){
 if(document.getElementById("editorPass").value==="kys2"){
 editor.contentEditable=true
 document.getElementById("visitorBox").style.display="block"
-alert("Editor Enabled")
 
 editor.addEventListener("input",()=>{
 db.ref("site/content").set(editor.innerHTML)
@@ -177,7 +167,7 @@ if(snap.val()) editor.innerHTML=snap.val()
 const visitRef=db.ref("visits")
 visitRef.transaction(v=>(v||0)+1)
 visitRef.on("value",snap=>{
-document.getElementById("visitorCount").textContent=snap.val()
+visitorCount.textContent=snap.val()
 })
 
 /* COPY */
@@ -195,38 +185,45 @@ serverStatus.textContent=d.online?"Online":"Offline"
 serverPlayers.textContent=d.players?`${d.players.online}/${d.players.max}`:"0"
 serverMOTD.textContent=d.motd?.clean||""
 
-playerList.innerHTML=""
-
-if(d.players?.list){
-d.players.list.forEach(p=>{
-const div=document.createElement("div")
-div.innerHTML=`<img src="https://mc-heads.net/avatar/${p}/30"> ${p}`
-playerList.appendChild(div)
-})
-}else{
-playerList.innerHTML="No players online"
-}
+playerList.innerHTML=d.players?.list
+? d.players.list.map(p=>`<div>${p}</div>`).join("")
+: "No players online"
 }
 fetchServer()
 setInterval(fetchServer,15000)
 
-/* MUSIC FIX */
+/* AUDIO SYSTEM (FIXED) */
 const music=document.getElementById("music")
-music.play().catch(()=>{})
 
-document.addEventListener("click",()=>{
-music.muted=false
-music.play()
-},{once:true})
-
-/* AUDIO VISUALIZER + COLOR REACTIVE */
-const ctxAudio=new AudioContext()
+const ctxAudio=new (window.AudioContext||window.webkitAudioContext)()
 const analyser=ctxAudio.createAnalyser()
 const source=ctxAudio.createMediaElementSource(music)
 
 source.connect(analyser)
 analyser.connect(ctxAudio.destination)
 
+let started=false
+
+function startAudio(){
+if(started) return
+started=true
+
+music.muted=false
+music.play().catch(()=>{})
+
+if(ctxAudio.state==="suspended"){
+ctxAudio.resume()
+}
+
+drawVisualizer()
+}
+
+/* TRIGGER ON EVERYTHING */
+["click","keydown","scroll","touchstart","mousemove"].forEach(e=>{
+window.addEventListener(e,startAudio,{once:true})
+})
+
+/* VISUALIZER + COLOR */
 const vcanvas=document.getElementById("visualizer")
 const vctx=vcanvas.getContext("2d")
 
@@ -254,21 +251,14 @@ x+=barWidth+1
 total+=v
 })
 
-/* SMOOTH INTENSITY */
 smooth = smooth*0.8 + (total/data.length)*0.2
 
-const red = Math.min(255, smooth*2)
-const glow = smooth/255
+const red=Math.min(255,smooth*2)
+const glow=smooth/255
 
-document.documentElement.style.setProperty("--theme", `rgb(${red},0,0)`)
-
-document.body.style.boxShadow = `inset 0 0 ${50+smooth}px rgba(${red},0,0,${glow})`
+document.documentElement.style.setProperty("--theme",`rgb(${red},0,0)`)
+document.body.style.boxShadow=`inset 0 0 ${50+smooth}px rgba(${red},0,0,${glow})`
 }
-
-music.addEventListener("play",()=>{
-ctxAudio.resume()
-drawVisualizer()
-})
 
 /* RAIN */
 const rainCanvas=document.getElementById("rain")
@@ -288,10 +278,8 @@ ys:10+Math.random()*8
 })
 }
 
-function drawRain(){
+setInterval(()=>{
 rctx.clearRect(0,0,rainCanvas.width,rainCanvas.height)
-
-rctx.strokeStyle="rgba(255,255,255,0.15)"
 rctx.beginPath()
 
 rain.forEach(r=>{
@@ -307,20 +295,17 @@ r.x=Math.random()*rainCanvas.width
 }
 })
 
+rctx.strokeStyle="rgba(255,255,255,0.15)"
 rctx.stroke()
-}
-setInterval(drawRain,30)
+},30)
 
 /* LIGHTNING */
-const lightning=document.getElementById("lightning")
-const thunder=document.getElementById("thunderSound")
-
 setInterval(()=>{
 if(Math.random()>0.7){
 lightning.style.opacity="0.8"
 setTimeout(()=>{
 lightning.style.opacity="0"
-thunder.play()
+thunderSound.play()
 },120)
 }
 },4000)
