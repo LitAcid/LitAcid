@@ -120,10 +120,6 @@ Nothing right now.
 
 </div>
 
-<audio id="music" loop preload="auto">
-<source src="https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3">
-</audio>
-
 <div id="visitorBox">
 Visitors: <span id="visitorCount">0</span>
 </div>
@@ -187,73 +183,81 @@ playerList.innerHTML=d.players?.list
 fetchServer()
 setInterval(fetchServer,15000)
 
-/* 🔥 PERFECT AUDIO SYSTEM */
-const music=document.getElementById("music")
+/* 🔥 REAL AUDIO SYSTEM (BUFFER METHOD) */
 
-const ctxAudio=new (window.AudioContext||window.webkitAudioContext)()
-const analyser=ctxAudio.createAnalyser()
-const source=ctxAudio.createMediaElementSource(music)
+let ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+let analyser = ctxAudio.createAnalyser();
+analyser.fftSize = 256;
 
-source.connect(analyser)
-analyser.connect(ctxAudio.destination)
+let sourceNode;
+let bufferData;
 
-let started=false
-
-function startAudio(){
-if(started) return
-started=true
-
-ctxAudio.resume().then(()=>{
-music.currentTime=0
-music.volume=1
-music.muted=false
-
-music.play().then(()=>{
-drawVisualizer()
-}).catch(err=>{
-console.log("Play failed:", err)
-})
-})
+/* LOAD AUDIO */
+async function loadAudio() {
+  const res = await fetch("https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3");
+  const arrayBuffer = await res.arrayBuffer();
+  bufferData = await ctxAudio.decodeAudioData(arrayBuffer);
 }
 
-/* GUARANTEED TRIGGER */
-window.addEventListener("click", startAudio)
+loadAudio();
+
+/* PLAY AUDIO */
+function playAudio() {
+  if (!bufferData) return;
+
+  sourceNode = ctxAudio.createBufferSource();
+  sourceNode.buffer = bufferData;
+  sourceNode.loop = true;
+
+  sourceNode.connect(analyser);
+  analyser.connect(ctxAudio.destination);
+
+  sourceNode.start(0);
+
+  drawVisualizer();
+}
+
+/* START ON CLICK */
+window.addEventListener("click", async () => {
+  await ctxAudio.resume();
+  playAudio();
+}, { once: true });
 
 /* VISUALIZER */
-const vcanvas=document.getElementById("visualizer")
-const vctx=vcanvas.getContext("2d")
+const vcanvas = document.getElementById("visualizer");
+const vctx = vcanvas.getContext("2d");
 
-vcanvas.width=window.innerWidth
-vcanvas.height=120
+vcanvas.width = window.innerWidth;
+vcanvas.height = 120;
 
-let smooth=0
+let smooth = 0;
 
-function drawVisualizer(){
-requestAnimationFrame(drawVisualizer)
+function drawVisualizer() {
+  requestAnimationFrame(drawVisualizer);
 
-const data=new Uint8Array(analyser.frequencyBinCount)
-analyser.getByteFrequencyData(data)
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
 
-vctx.clearRect(0,0,vcanvas.width,vcanvas.height)
+  vctx.clearRect(0, 0, vcanvas.width, vcanvas.height);
 
-let total=0
-let x=0
-const barWidth=vcanvas.width/data.length
+  let total = 0;
+  let x = 0;
+  const barWidth = vcanvas.width / data.length;
 
-data.forEach(v=>{
-vctx.fillStyle="cyan"
-vctx.fillRect(x,vcanvas.height-v/2,barWidth,v/2)
-x+=barWidth+1
-total+=v
-})
+  data.forEach(v => {
+    vctx.fillStyle = "cyan";
+    vctx.fillRect(x, vcanvas.height - v / 2, barWidth, v / 2);
+    x += barWidth + 1;
+    total += v;
+  });
 
-smooth = smooth*0.85 + (total/data.length)*0.15
+  smooth = smooth * 0.85 + (total / data.length) * 0.15;
 
-const red=Math.min(255,smooth*2)
-const glow=smooth/255
+  const red = Math.min(255, smooth * 2);
+  const glow = smooth / 255;
 
-document.documentElement.style.setProperty("--theme",`rgb(${red},0,0)`)
-document.body.style.boxShadow=`inset 0 0 ${60+smooth}px rgba(${red},0,0,${glow})`
+  document.documentElement.style.setProperty("--theme", `rgb(${red},0,0)`);
+  document.body.style.boxShadow = `inset 0 0 ${60 + smooth}px rgba(${red},0,0,${glow})`;
 }
 
 /* RAIN */
