@@ -13,7 +13,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-
 :root{--theme:#ff0000}
 
 body{
@@ -24,42 +23,13 @@ font-family:Inter;
 overflow-x:hidden;
 }
 
-canvas{
-position:fixed;
-top:0;
-left:0;
-z-index:-3;
-}
+canvas{position:fixed;top:0;left:0;z-index:-3}
+#visualizer{position:fixed;bottom:0;width:100%;height:120px;z-index:-2;opacity:.5}
 
-#visualizer{
-position:fixed;
-bottom:0;
-left:0;
-width:100%;
-height:120px;
-z-index:-2;
-opacity:.5;
-}
+header{text-align:center;padding:60px 20px}
+header h1{font-family:Orbitron;font-size:48px;color:var(--theme);text-shadow:0 0 20px var(--theme)}
 
-header{
-text-align:center;
-padding:60px 20px;
-}
-
-header h1{
-font-family:Orbitron;
-font-size:48px;
-color:var(--theme);
-text-shadow:0 0 20px var(--theme);
-}
-
-.container{
-display:flex;
-justify-content:center;
-gap:35px;
-padding:30px;
-flex-wrap:wrap;
-}
+.container{display:flex;justify-content:center;gap:35px;padding:30px;flex-wrap:wrap}
 
 .box{
 background:rgba(255,255,255,0.05);
@@ -86,63 +56,15 @@ font-weight:600;
 cursor:pointer;
 }
 
-#copyBtn{
-margin-left:10px;
-padding:4px 10px;
-}
+#editorUnlock{position:fixed;top:10px;left:10px;z-index:50}
+#visitorBox{display:none;position:fixed;bottom:20px;right:20px;background:#0009;padding:8px 12px;border-radius:8px}
 
-#playerList div{
-display:flex;
-align-items:center;
-gap:10px;
-margin-bottom:6px;
-}
-
-#skinButton{
-position:fixed;
-bottom:20px;
-left:20px;
-}
-
-#visitorBox{
-display:none;
-position:fixed;
-bottom:20px;
-right:20px;
-background:#0009;
-padding:8px 12px;
-border-radius:8px;
-}
-
-#editorUnlock{
-position:fixed;
-top:10px;
-left:10px;
-z-index:50;
-}
-
-.lightning{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:white;
-opacity:0;
-pointer-events:none;
-}
+.lightning{position:fixed;top:0;left:0;width:100%;height:100%;background:white;opacity:0;pointer-events:none}
 
 @media(max-width:850px){
-
-.container{
-flex-direction:column;
-align-items:center;
-}
-
+.container{flex-direction:column;align-items:center}
 .box{width:90%}
-
 }
-
 </style>
 </head>
 
@@ -166,24 +88,18 @@ align-items:center;
 <div class="container">
 
 <div class="box">
-
 <h3>Connect</h3>
-
 <a class="button" href="https://youtube.com/@litacid">YouTube</a>
-
 <a class="button" href="https://instagram.com/litacid2">Instagram</a>
-
 <div class="button">Discord: @litacid</div>
-
 </div>
 
 <div class="box server">
-
 <h3>Minecraft Server</h3>
 
 <p>
 IP: <b id="serverIP">quitmc.playwithbao.com</b>
-<button id="copyBtn" onclick="copyIP()">Copy</button>
+<button onclick="copyIP()">Copy</button>
 </p>
 
 <p>
@@ -194,34 +110,25 @@ Players: <span id="serverPlayers">...</span>
 <p id="serverMOTD"></p>
 
 <h4>Online Players</h4>
-
 <div id="playerList">Loading...</div>
-
 </div>
 
 <div class="box">
-
 <h3>What I am working on rn</h3>
-
 <div id="editableContent" contenteditable="false">
 Nothing right now.
 </div>
-
 </div>
 
 </div>
 
-<audio id="music" loop preload="auto">
+<audio id="music" autoplay loop muted>
 <source src="https://image2url.com/r2/default/audio/1773480604788-5b579849-e3af-42d9-bfa5-a4f55956d700.mp3">
 </audio>
 
 <audio id="thunderSound">
 <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6edb7f0c2e.mp3">
 </audio>
-
-<div id="skinButton">
-<a id="downloadSkin" class="button">Download My Skin</a>
-</div>
 
 <div id="visitorBox">
 Visitors: <span id="visitorCount">0</span>
@@ -230,181 +137,115 @@ Visitors: <span id="visitorCount">0</span>
 <script>
 
 /* FIREBASE */
-
 const firebaseConfig={
 apiKey:"YOUR_API_KEY",
 authDomain:"YOUR_PROJECT.firebaseapp.com",
 databaseURL:"https://YOUR_PROJECT.firebaseio.com",
 projectId:"YOUR_PROJECT"
 }
-
 firebase.initializeApp(firebaseConfig)
-
 const db=firebase.database()
 
-/* EDITOR MODE */
+/* EDITOR + SAVE SYSTEM */
+const editor=document.getElementById("editableContent")
 
 function unlockEditor(){
-
 if(document.getElementById("editorPass").value==="kys2"){
-
-document.getElementById("editableContent").contentEditable=true
-
+editor.contentEditable=true
 document.getElementById("visitorBox").style.display="block"
+alert("Editor Enabled")
 
-alert("Editor Mode Enabled")
-
+// SAVE ON CHANGE
+editor.addEventListener("input",()=>{
+db.ref("site/content").set(editor.innerHTML)
+})
+}
 }
 
+// LOAD FOR EVERYONE
+db.ref("site/content").on("value",snap=>{
+if(snap.val()){
+editor.innerHTML=snap.val()
 }
+})
 
-/* VISITOR COUNTER */
-
+/* VISIT COUNTER */
 const visitRef=db.ref("visits")
-
 visitRef.transaction(v=>(v||0)+1)
-
 visitRef.on("value",snap=>{
 document.getElementById("visitorCount").textContent=snap.val()
 })
 
 /* COPY IP */
-
 function copyIP(){
-
 navigator.clipboard.writeText("quitmc.playwithbao.com")
-
 alert("IP Copied")
-
 }
 
 /* SERVER STATUS */
-
 async function fetchServer(){
-
 const r=await fetch("https://api.mcsrvstat.us/3/quitmc.playwithbao.com")
-
 const d=await r.json()
 
-document.getElementById("serverStatus").textContent=d.online?"Online":"Offline"
+serverStatus.textContent=d.online?"Online":"Offline"
+serverPlayers.textContent=d.players?`${d.players.online}/${d.players.max}`:"0"
+serverMOTD.textContent=d.motd?.clean||""
 
-document.getElementById("serverPlayers").textContent=d.players?`${d.players.online}/${d.players.max}`:"0"
-
-document.getElementById("serverMOTD").textContent=d.motd?.clean||""
-
-const list=document.getElementById("playerList")
-
-list.innerHTML=""
+playerList.innerHTML=""
 
 if(d.players?.list){
-
 d.players.list.forEach(p=>{
-
 const div=document.createElement("div")
-
 div.innerHTML=`<img src="https://mc-heads.net/avatar/${p}/30"> ${p}`
-
-list.appendChild(div)
-
+playerList.appendChild(div)
 })
-
 }else{
-
-list.innerHTML="No players online"
-
+playerList.innerHTML="No players online"
 }
-
 }
-
 fetchServer()
-
 setInterval(fetchServer,15000)
 
-/* SKIN DOWNLOAD */
-
-async function skin(){
-
-const uuid=await fetch("https://api.mojang.com/users/profiles/minecraft/litacid").then(r=>r.json())
-
-const data=await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid.id}`).then(r=>r.json())
-
-const tex=JSON.parse(atob(data.properties[0].value))
-
-document.getElementById("downloadSkin").href=tex.textures.SKIN.url
-
-}
-
-skin()
-
-/* PLAY MUSIC ON ANY INPUT */
-
+/* MUSIC FIX (WORKS EVERYWHERE) */
 const music=document.getElementById("music")
-
-let musicStarted=false
-
-function startMusic(){
-
-if(musicStarted) return
-
-musicStarted=true
 
 music.play().catch(()=>{})
 
-}
+document.addEventListener("click",()=>{
+music.muted=false
+music.play()
+},{once:true})
 
-["click","keydown","scroll","touchstart","mousemove"].forEach(e=>{
-window.addEventListener(e,startMusic,{once:true})
-})
-
-/* MUSIC VISUALIZER */
-
+/* VISUALIZER */
 const ctxAudio=new AudioContext()
-
 const analyser=ctxAudio.createAnalyser()
-
 const source=ctxAudio.createMediaElementSource(music)
 
 source.connect(analyser)
-
 analyser.connect(ctxAudio.destination)
 
-analyser.fftSize=256
-
-const bufferLength=analyser.frequencyBinCount
-
-const dataArray=new Uint8Array(bufferLength)
-
 const vcanvas=document.getElementById("visualizer")
-
 const vctx=vcanvas.getContext("2d")
 
 vcanvas.width=window.innerWidth
 vcanvas.height=120
 
 function drawVisualizer(){
-
 requestAnimationFrame(drawVisualizer)
 
-analyser.getByteFrequencyData(dataArray)
+const data=new Uint8Array(analyser.frequencyBinCount)
+analyser.getByteFrequencyData(data)
 
 vctx.clearRect(0,0,vcanvas.width,vcanvas.height)
 
-const barWidth=vcanvas.width/bufferLength
-
 let x=0
+const barWidth=vcanvas.width/data.length
 
-for(let i=0;i<bufferLength;i++){
-
-const h=dataArray[i]
-
+data.forEach(v=>{
 vctx.fillStyle="cyan"
-
-vctx.fillRect(x,vcanvas.height-h/2,barWidth,h/2)
-
+vctx.fillRect(x,vcanvas.height-v/2,barWidth,v/2)
 x+=barWidth+1
-
-}
-
+})
 }
 
 music.addEventListener("play",()=>{
@@ -413,7 +254,6 @@ drawVisualizer()
 })
 
 /* RAIN */
-
 const rainCanvas=document.getElementById("rain")
 const rctx=rainCanvas.getContext("2d")
 
@@ -423,26 +263,21 @@ rainCanvas.height=window.innerHeight
 let rain=[]
 
 for(let i=0;i<400;i++){
-
 rain.push({
 x:Math.random()*rainCanvas.width,
 y:Math.random()*rainCanvas.height,
 xs:-3+Math.random()*6,
 ys:10+Math.random()*8
 })
-
 }
 
 function drawRain(){
-
 rctx.clearRect(0,0,rainCanvas.width,rainCanvas.height)
 
 rctx.strokeStyle="rgba(255,255,255,0.15)"
-
 rctx.beginPath()
 
 rain.forEach(r=>{
-
 rctx.moveTo(r.x,r.y)
 rctx.lineTo(r.x+r.xs,r.y+r.ys)
 
@@ -450,41 +285,27 @@ r.x+=r.xs
 r.y+=r.ys
 
 if(r.y>rainCanvas.height){
-
 r.y=-10
 r.x=Math.random()*rainCanvas.width
-
 }
-
 })
 
 rctx.stroke()
-
 }
-
 setInterval(drawRain,30)
 
 /* LIGHTNING */
-
 const lightning=document.getElementById("lightning")
 const thunder=document.getElementById("thunderSound")
 
 setInterval(()=>{
-
 if(Math.random()>0.7){
-
 lightning.style.opacity="0.8"
-
 setTimeout(()=>{
-
 lightning.style.opacity="0"
-
 thunder.play()
-
 },120)
-
 }
-
 },4000)
 
 </script>
