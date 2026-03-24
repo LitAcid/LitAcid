@@ -8,7 +8,6 @@
 <title>LitAcid</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Inter&display=swap" rel="stylesheet">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -19,115 +18,56 @@ margin:0;
 background:#050505;
 color:white;
 font-family:Inter;
-overflow-x:hidden;
-transition:0.3s;
+overflow:hidden;
 }
 
 /* CANVAS */
-canvas{
-position:fixed;
-top:0;
-left:0;
-z-index:-3;
-}
-
-#visualizer{
-position:fixed;
-bottom:0;
-width:100%;
-height:140px;
-z-index:-2;
-}
+canvas{position:fixed;top:0;left:0;z-index:-2;}
+#visualizer{bottom:0;height:140px;z-index:-1}
 
 /* HEADER */
 header{text-align:center;padding:60px 20px}
-
-header h1{
-font-family:Orbitron;
-font-size:48px;
-color:var(--theme);
-text-shadow:0 0 20px var(--theme);
-}
+h1{font-family:Orbitron;color:var(--theme);text-shadow:0 0 20px var(--theme)}
 
 /* BOX */
-.container{
-display:flex;
-justify-content:center;
-gap:35px;
-padding:30px;
-flex-wrap:wrap;
-}
-
+.container{display:flex;flex-wrap:wrap;justify-content:center;gap:30px}
 .box{
 background:rgba(255,255,255,0.05);
 border:1px solid var(--theme);
-border-radius:20px;
-padding:28px;
+padding:20px;
+border-radius:15px;
 width:280px;
-backdrop-filter:blur(14px);
-box-shadow:0 0 20px var(--theme);
 }
 
+/* BUTTON */
 .button{
-display:block;
-text-align:center;
-padding:12px;
-margin:10px 0;
-border-radius:10px;
-background:white;
-color:black;
-font-weight:600;
-cursor:pointer;
+background:white;color:black;
+padding:10px;margin:8px 0;
+text-align:center;border-radius:8px;cursor:pointer;
 }
 
 /* EDITOR */
-#editorUnlock{
-position:fixed;
-top:10px;
-left:10px;
-z-index:50;
-}
+#editorUnlock{position:fixed;top:10px;left:10px;z-index:10}
 
 /* POPUP */
 #contactPopup{
 display:none;
 position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.85);
-align-items:center;
-justify-content:center;
-z-index:999;
+top:0;left:0;width:100%;height:100%;
+background:#000c;
+justify-content:center;align-items:center;
 }
 
 .popupBox{
-background:#111;
-padding:25px;
-border-radius:15px;
-width:320px;
-text-align:center;
-border:1px solid var(--theme);
+background:#111;padding:20px;border-radius:10px;width:300px;
 }
 
-input, textarea{
-width:90%;
-padding:8px;
-margin:5px;
-border-radius:6px;
-border:none;
-}
+input,textarea{width:100%;margin:5px 0;padding:6px}
 
-.lightning{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:white;
-opacity:0;
-pointer-events:none;
+/* LIGHTNING */
+#lightning{
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:white;opacity:0;pointer-events:none;
 }
 </style>
 </head>
@@ -141,11 +81,10 @@ pointer-events:none;
 
 <canvas id="rain"></canvas>
 <canvas id="visualizer"></canvas>
-<div id="lightning" class="lightning"></div>
+<div id="lightning"></div>
 
 <header>
 <h1>LitAcid</h1>
-<p>Minecraft PvP • Server Manager • Website Dev</p>
 </header>
 
 <div class="container">
@@ -159,9 +98,7 @@ pointer-events:none;
 
 <div class="box">
 <h3>What I am doing rn</h3>
-<div id="editableContent" contenteditable="false">
-Nothing right now.
-</div>
+<div id="editableContent">Nothing rn</div>
 </div>
 
 <div class="box">
@@ -175,15 +112,8 @@ Nothing right now.
 <div id="contactPopup">
 <div class="popupBox">
 
-<h3>🚀 Get Your Website</h3>
-
-<a class="button" href="https://instagram.com/litacid2" target="_blank">Instagram</a>
-<div class="button">Discord: @litacid</div>
-
-<hr>
-
-<input id="clientName" placeholder="Your name">
-<textarea id="clientMsg" placeholder="What do you need?"></textarea>
+<input id="clientName" placeholder="name">
+<textarea id="clientMsg" placeholder="message"></textarea>
 
 <div class="button" onclick="sendMessage()">Send</div>
 <div class="button" onclick="closeContact()">Close</div>
@@ -191,73 +121,55 @@ Nothing right now.
 </div>
 </div>
 
-<!-- AUDIO -->
-<audio id="music" loop>
-<source src="https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3">
-</audio>
-
-<audio id="thunderSound">
-<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6edb7f0c2e.mp3">
-</audio>
+<audio id="music" loop src="https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3"></audio>
+<audio id="thunderSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6edb7f0c2e.mp3"></audio>
 
 <script>
 
 /* SUPABASE */
 const supabase = window.supabase.createClient(
 "https://exdavylpexaiwzqpaxje.supabase.co",
-"PASTE_YOUR_KEY"
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 );
 
-/* EDITOR MODE */
+/* EDITOR */
 function unlockEditor(){
 if(document.getElementById("editorPass").value==="kys2"){
-const el=document.getElementById("editableContent");
+let el=document.getElementById("editableContent");
 el.contentEditable=true;
-alert("Editor Enabled");
 
-/* LOAD */
-el.innerText=localStorage.getItem("siteContent")||el.innerText;
+/* LOAD GLOBAL */
+loadContent();
 
-/* SAVE */
-el.addEventListener("input",()=>{
-localStorage.setItem("siteContent",el.innerText);
-});
+el.addEventListener("input",saveContent);
 }
+}
+
+async function saveContent(){
+await supabase.from("site_content").upsert({id:1,text:editableContent.innerText});
+}
+
+async function loadContent(){
+let {data}=await supabase.from("site_content").select("*").eq("id",1).single();
+if(data) editableContent.innerText=data.text;
 }
 
 /* POPUP */
-function openContact(){
-document.getElementById("contactPopup").style.display="flex";
-}
-function closeContact(){
-document.getElementById("contactPopup").style.display="none";
-}
+function openContact(){contactPopup.style.display="flex"}
+function closeContact(){contactPopup.style.display="none"}
 
-/* SEND MESSAGE */
+/* MESSAGE */
 async function sendMessage(){
-const name=document.getElementById("clientName").value;
-const msg=document.getElementById("clientMsg").value;
+let name=clientName.value,msg=clientMsg.value;
+if(!name||!msg)return alert("fill");
 
-if(!name||!msg){alert("Fill all fields");return;}
-
-const {error}=await supabase.from("client_requests").insert([{name,message:msg}]);
-
-if(error){alert("Error");console.log(error);}
-else{alert("Sent");closeContact();}
+await supabase.from("client_requests").insert([{name,message:msg}]);
+alert("sent");
+closeContact();
 }
 
-/* MUSIC */
+/* MUSIC FIX */
 const music=document.getElementById("music");
-let started=false;
-
-window.addEventListener("click",()=>{
-if(!started){
-music.play().catch(()=>{});
-started=true;
-}
-});
-
-/* VISUALIZER */
 const ctx=new AudioContext();
 const src=ctx.createMediaElementSource(music);
 const analyser=ctx.createAnalyser();
@@ -265,6 +177,19 @@ const analyser=ctx.createAnalyser();
 src.connect(analyser);
 analyser.connect(ctx.destination);
 
+let started=false;
+
+window.addEventListener("click",async()=>{
+if(!started){
+await ctx.resume();
+music.volume=1;
+music.play();
+started=true;
+draw();
+}
+});
+
+/* VISUALIZER */
 const canvas=document.getElementById("visualizer");
 const c=canvas.getContext("2d");
 canvas.width=window.innerWidth;
@@ -272,7 +197,7 @@ canvas.width=window.innerWidth;
 function draw(){
 requestAnimationFrame(draw);
 
-const data=new Uint8Array(analyser.frequencyBinCount);
+let data=new Uint8Array(analyser.frequencyBinCount);
 analyser.getByteFrequencyData(data);
 
 c.clearRect(0,0,canvas.width,canvas.height);
@@ -280,41 +205,31 @@ c.clearRect(0,0,canvas.width,canvas.height);
 let total=0,x=0;
 
 data.forEach(v=>{
-const h=v*0.7;
+let h=v*0.7;
 c.fillStyle="white";
 c.fillRect(x,canvas.height-h,2,h);
 x+=3;
 total+=v;
 });
 
-/* THEME */
 let val=Math.min(255,40+total/data.length*2);
 document.documentElement.style.setProperty("--theme",`rgb(${val},${val},${val})`);
 }
 
-music.onplay=()=>{ctx.resume();draw();};
-
 /* RAIN */
 const rainCanvas=document.getElementById("rain");
 const rctx=rainCanvas.getContext("2d");
-
-rainCanvas.width=window.innerWidth;
-rainCanvas.height=window.innerHeight;
+rainCanvas.width=innerWidth;
+rainCanvas.height=innerHeight;
 
 let rain=[];
-
-for(let i=0;i<400;i++){
-rain.push({
-x:Math.random()*window.innerWidth,
-y:Math.random()*window.innerHeight,
-xs:-2+Math.random()*4,
-ys:10+Math.random()*5
-});
+for(let i=0;i<500;i++){
+rain.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,xs:-2+Math.random()*4,ys:8+Math.random()*6});
 }
 
 setInterval(()=>{
-rctx.clearRect(0,0,rainCanvas.width,rainCanvas.height);
-rctx.strokeStyle="rgba(255,255,255,0.15)";
+rctx.clearRect(0,0,innerWidth,innerHeight);
+rctx.strokeStyle="rgba(255,255,255,0.2)";
 rctx.beginPath();
 
 rain.forEach(r=>{
@@ -324,27 +239,22 @@ rctx.lineTo(r.x+r.xs,r.y+r.ys);
 r.x+=r.xs;
 r.y+=r.ys;
 
-if(r.y>window.innerHeight){
-r.y=0;
-r.x=Math.random()*window.innerWidth;
-}
+if(r.y>innerHeight){r.y=0;r.x=Math.random()*innerWidth}
 });
 
 rctx.stroke();
 },30);
 
 /* LIGHTNING */
-const lightning=document.getElementById("lightning");
-const thunder=document.getElementById("thunderSound");
-
 setInterval(()=>{
-if(Math.random()>0.7){
-lightning.style.opacity="0.8";
+if(Math.random()>0.75){
+lightning.style.opacity=1;
 
 setTimeout(()=>{
-lightning.style.opacity="0";
-thunder.play();
-},120);
+lightning.style.opacity=0;
+thunderSound.currentTime=0;
+thunderSound.play();
+},100);
 }
 },4000);
 
