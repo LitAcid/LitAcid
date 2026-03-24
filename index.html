@@ -15,7 +15,14 @@ font-family:Inter;
 overflow-x:hidden;
 }
 canvas{position:fixed;top:0;left:0;z-index:-3;}
-#visualizer{position:fixed;bottom:0;width:100%;height:120px;z-index:-2;}
+#visualizer{
+    position:fixed;
+    bottom:0;
+    left:0;
+    width:100%;
+    height:120px;
+    z-index:-2;
+}
 #lightning{position:fixed;top:0;left:0;width:100%;height:100%;background:white;opacity:0;pointer-events:none;z-index:-1;transition:opacity 0.1s;}
 header{text-align:center;padding:60px 20px;}
 header h1{font-family:Orbitron;font-size:48px;color:var(--theme);text-shadow:0 0 20px var(--theme);transition:0.2s;}
@@ -175,7 +182,7 @@ function animateTheme(){
     document.documentElement.style.setProperty("--theme", `rgb(${brightness},${brightness},${brightness})`);
 }
 
-/* ================= VISUALIZER (UPDATED) ================= */
+/* ================= VISUALIZER (BOTTOM + WHITE GLOW) ================= */
 const vcanvas = document.getElementById("visualizer");
 const vctx = vcanvas.getContext("2d");
 vcanvas.width = window.innerWidth;
@@ -199,9 +206,17 @@ function animateVisualizer(){
 
     for(let i=0; i<dataArray.length; i++){
         let barHeight = dataArray[i];
-        vctx.fillStyle = `hsl(${i*2}, 100%, 50%)`; // colorful gradient
-        // Draw bars from bottom upwards
+
+        // Map intensity to gray -> white
+        let intensity = Math.min(255, barHeight*2); // 0-255
+        let color = `rgb(${intensity},${intensity},${intensity})`;
+
+        vctx.shadowColor = color;
+        vctx.shadowBlur = 15; // glow effect
+
+        vctx.fillStyle = color;
         vctx.fillRect(x, vcanvas.height - barHeight/2, barWidth, barHeight/2);
+
         x += barWidth + gap;
     }
 }
