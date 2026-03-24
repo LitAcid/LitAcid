@@ -8,95 +8,32 @@
 <title>LitAcid</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Inter&display=swap" rel="stylesheet">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
 
-:root{--theme:#aaa}
+:root{
+--theme: rgb(120,120,120);
+}
 
 body{
 margin:0;
 background:#050505;
 color:white;
 font-family:Inter;
-overflow-x:hidden;
+overflow:hidden;
 }
 
+/* RAIN CANVAS */
 canvas{
 position:fixed;
 top:0;
 left:0;
-z-index:-3;
-}
-
-#visualizer{
-position:fixed;
-bottom:0;
-width:100%;
-height:120px;
 z-index:-2;
 }
 
-header{text-align:center;padding:60px 20px;}
-
-header h1{
-font-family:Orbitron;
-font-size:48px;
-color:var(--theme);
-text-shadow:0 0 20px var(--theme);
-}
-
-.container{
-display:flex;
-justify-content:center;
-gap:35px;
-padding:30px;
-flex-wrap:wrap;
-}
-
-.box{
-background:rgba(255,255,255,0.05);
-border:1px solid var(--theme);
-border-radius:20px;
-padding:28px;
-width:280px;
-backdrop-filter:blur(14px);
-box-shadow:0 0 20px var(--theme);
-}
-
-.button{
-display:block;
-text-align:center;
-padding:12px;
-margin:10px 0;
-border-radius:10px;
-background:white;
-color:black;
-font-weight:600;
-cursor:pointer;
-}
-
-#editorUnlock{
-position:fixed;
-top:10px;
-left:10px;
-z-index:50;
-}
-
-#visitorBox{
-position:fixed;
-bottom:20px;
-right:20px;
-background:#0009;
-padding:8px 12px;
-border-radius:8px;
-display:none;
-}
-
-.lightning{
+/* LIGHTNING */
+#lightning{
 position:fixed;
 top:0;
 left:0;
@@ -105,46 +42,64 @@ height:100%;
 background:white;
 opacity:0;
 pointer-events:none;
+z-index:-1;
 }
 
-#contactPopup{
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:#000c;
+/* HEADER */
+header{
+text-align:center;
+padding:80px 20px;
+}
+
+header h1{
+font-family:Orbitron;
+font-size:48px;
+color:var(--theme);
+text-shadow:0 0 20px var(--theme);
+transition:0.2s;
+}
+
+.container{
+display:flex;
 justify-content:center;
-align-items:center;
-}
-
-.popup{
-background:#111;
+gap:30px;
+flex-wrap:wrap;
 padding:20px;
-border-radius:10px;
-width:300px;
 }
 
-input,textarea{width:100%;margin:5px 0;padding:8px}
+.box{
+background:rgba(255,255,255,0.05);
+border:1px solid var(--theme);
+border-radius:20px;
+padding:25px;
+width:260px;
+backdrop-filter:blur(10px);
+box-shadow:0 0 20px var(--theme);
+}
+
+.button{
+display:block;
+text-align:center;
+padding:10px;
+margin:10px 0;
+border-radius:10px;
+background:white;
+color:black;
+font-weight:bold;
+cursor:pointer;
+}
 
 </style>
 </head>
 
 <body>
 
-<div id="editorUnlock">
-<input id="editorPass" placeholder="editor code">
-<button onclick="unlockEditor()">unlock</button>
-</div>
-
 <canvas id="rain"></canvas>
-<canvas id="visualizer"></canvas>
-<div id="lightning" class="lightning"></div>
+<div id="lightning"></div>
 
 <header>
 <h1>LitAcid</h1>
-<p>Minecraft PvP • Server Manager • Game Dev</p>
+<p>Minecraft PvP • Server Manager • Web Dev</p>
 </header>
 
 <div class="container">
@@ -157,161 +112,147 @@ input,textarea{width:100%;margin:5px 0;padding:8px}
 </div>
 
 <div class="box">
-<h3>What I am working on rn</h3>
-<div id="editableContent">Nothing right now.</div>
-</div>
-
-<div class="box">
-<h3>🚀 Get Your Own Website</h3>
-<div class="button" onclick="openContact()">Get Started</div>
+<h3>🚀 Get Your Website</h3>
+<div class="button" onclick="alert('DM me on Instagram or Discord')">Get Started</div>
 </div>
 
 </div>
 
-<div id="visitorBox">Visitors: <span id="visitorCount">0</span></div>
+<!-- AUDIO -->
+<audio id="music" loop>
+<source src="https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3">
+</audio>
 
-<!-- POPUP -->
-<div id="contactPopup">
-<div class="popup">
-
-<input id="clientName" placeholder="Your name">
-<textarea id="clientMsg" placeholder="Your request"></textarea>
-
-<div class="button" onclick="sendMessage()">Send</div>
-<div class="button" onclick="closeContact()">Close</div>
-
-</div>
-</div>
-
-<audio id="music" loop src="https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3"></audio>
-<audio id="thunderSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6edb7f0c2e.mp3"></audio>
+<audio id="thunderSound">
+<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6edb7f0c2e.mp3">
+</audio>
 
 <script>
 
-/* SUPABASE */
+/* ================= SUPABASE ================= */
+
 const supabase = window.supabase.createClient(
 "https://exdavylpexaiwzqpaxje.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4ZGF2eWxwZXhhaXd6cXBheGplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTgyMzUsImV4cCI6MjA4OTkzNDIzNX0.Fog-IUWksijTELBUMCQZPoLLmzhblXy6_2VsK0VUw58"
 );
 
-/* FIREBASE VISITOR */
-const firebaseConfig={databaseURL:"https://dummy.firebaseio.com"}
-firebase.initializeApp(firebaseConfig)
-const db=firebase.database()
+/* ================= MUSIC (FIXED) ================= */
 
-db.ref("visits").transaction(v=>(v||0)+1)
-db.ref("visits").on("value",snap=>{
-document.getElementById("visitorCount").textContent=snap.val()
-})
+const music = document.getElementById("music");
 
-/* EDITOR GLOBAL */
-async function unlockEditor(){
-if(editorPass.value==="kys2"){
-editableContent.contentEditable=true;
-visitorBox.style.display="block";
-
-let {data}=await supabase.from("site_content").select("*").eq("id",1).single();
-if(data) editableContent.innerText=data.text;
-
-editableContent.addEventListener("input",async()=>{
-await supabase.from("site_content").upsert({id:1,text:editableContent.innerText});
-});
-}
-}
-
-/* CONTACT */
-function openContact(){contactPopup.style.display="flex"}
-function closeContact(){contactPopup.style.display="none"}
-
-async function sendMessage(){
-let name=clientName.value,msg=clientMsg.value;
-if(!name||!msg)return alert("fill");
-
-await supabase.from("client_requests").insert([{name,message:msg}]);
-alert("sent");
-closeContact();
-}
-
-/* MUSIC FIX */
-const music=document.getElementById("music");
-const ctx=new AudioContext();
-const src=ctx.createMediaElementSource(music);
-const analyser=ctx.createAnalyser();
+const ctx = new AudioContext();
+const src = ctx.createMediaElementSource(music);
+const analyser = ctx.createAnalyser();
 
 src.connect(analyser);
 analyser.connect(ctx.destination);
 
-let started=false;
+let started = false;
 
-window.addEventListener("click",async()=>{
-if(!started){
+async function startMusic(){
+if(started) return;
+started = true;
+
 await ctx.resume();
-music.play();
-started=true;
-draw();
+
+music.volume = 1;
+music.play().catch(()=>{});
+
+animateTheme();
 }
+
+["click","keydown","scroll","touchstart"].forEach(e=>{
+window.addEventListener(e,startMusic,{once:true});
 });
 
-/* VISUALIZER */
-const canvas=document.getElementById("visualizer");
-const c=canvas.getContext("2d");
-canvas.width=window.innerWidth;
+/* ================= COLOR REACTION ================= */
 
-function draw(){
-requestAnimationFrame(draw);
-let data=new Uint8Array(analyser.frequencyBinCount);
-analyser.getByteFrequencyData(data);
+const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-c.clearRect(0,0,canvas.width,canvas.height);
+function animateTheme(){
+requestAnimationFrame(animateTheme);
 
-let total=0,x=0;
-data.forEach(v=>{
-c.fillRect(x,canvas.height-v/2,2,v/2);
-x+=3;
-total+=v;
+analyser.getByteFrequencyData(dataArray);
+
+let total = 0;
+for(let i=0;i<dataArray.length;i++){
+total += dataArray[i];
+}
+
+let avg = total / dataArray.length;
+let brightness = Math.min(255, 60 + avg * 1.8);
+
+document.documentElement.style.setProperty(
+"--theme",
+`rgb(${brightness},${brightness},${brightness})`
+);
+}
+
+/* ================= RAIN ================= */
+
+const rainCanvas = document.getElementById("rain");
+const rctx = rainCanvas.getContext("2d");
+
+rainCanvas.width = window.innerWidth;
+rainCanvas.height = window.innerHeight;
+
+let rain = [];
+
+for(let i=0;i<500;i++){
+rain.push({
+x:Math.random()*rainCanvas.width,
+y:Math.random()*rainCanvas.height,
+xs:-2+Math.random()*4,
+ys:10+Math.random()*8
 });
-
-let val=Math.min(255,40+total/data.length*2);
-document.documentElement.style.setProperty("--theme",`rgb(${val},${val},${val})`);
 }
 
-/* RAIN */
-const rainCanvas=document.getElementById("rain");
-const rctx=rainCanvas.getContext("2d");
-rainCanvas.width=innerWidth;
-rainCanvas.height=innerHeight;
+function drawRain(){
 
-let rain=[];
-for(let i=0;i<400;i++){
-rain.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,xs:-3+Math.random()*6,ys:10});
-}
+rctx.clearRect(0,0,rainCanvas.width,rainCanvas.height);
 
-setInterval(()=>{
-rctx.clearRect(0,0,innerWidth,innerHeight);
 rctx.strokeStyle="rgba(255,255,255,0.2)";
 rctx.beginPath();
 
 rain.forEach(r=>{
 rctx.moveTo(r.x,r.y);
 rctx.lineTo(r.x+r.xs,r.y+r.ys);
+
 r.x+=r.xs;
 r.y+=r.ys;
-if(r.y>innerHeight){r.y=0;r.x=Math.random()*innerWidth}
+
+if(r.y>rainCanvas.height){
+r.y=-10;
+r.x=Math.random()*rainCanvas.width;
+}
 });
 
 rctx.stroke();
-},30);
-
-/* LIGHTNING */
-setInterval(()=>{
-if(Math.random()>0.7){
-lightning.style.opacity=1;
-setTimeout(()=>{
-lightning.style.opacity=0;
-thunderSound.currentTime=0;
-thunderSound.play();
-},100);
 }
+
+setInterval(drawRain,30);
+
+/* ================= THUNDER ================= */
+
+const lightning = document.getElementById("lightning");
+const thunder = document.getElementById("thunderSound");
+
+setInterval(()=>{
+
+if(Math.random()>0.75){
+
+lightning.style.opacity="0.9";
+
+setTimeout(()=>{
+lightning.style.opacity="0";
+
+thunder.currentTime=0;
+thunder.play().catch(()=>{});
+
+},120);
+
+}
+
 },4000);
 
 </script>
