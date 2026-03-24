@@ -145,6 +145,7 @@ async function playMusicNoFail(){
         source.buffer = buffer;
         source.loop = true;
         analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
         dataArray = new Uint8Array(analyser.frequencyBinCount);
         source.connect(analyser);
         analyser.connect(ctx.destination);
@@ -174,22 +175,34 @@ function animateTheme(){
     document.documentElement.style.setProperty("--theme", `rgb(${brightness},${brightness},${brightness})`);
 }
 
-/* ================= VISUALIZER ================= */
+/* ================= VISUALIZER (UPDATED) ================= */
 const vcanvas = document.getElementById("visualizer");
 const vctx = vcanvas.getContext("2d");
 vcanvas.width = window.innerWidth;
 vcanvas.height = 120;
+
+window.addEventListener("resize", () => {
+    vcanvas.width = window.innerWidth;
+    vcanvas.height = 120;
+});
+
 function animateVisualizer(){
     requestAnimationFrame(animateVisualizer);
     if(!analyser) return;
     analyser.getByteFrequencyData(dataArray);
+
     vctx.clearRect(0,0,vcanvas.width,vcanvas.height);
-    let x=0;
-    for(let i=0;i<dataArray.length;i++){
-        let h = dataArray[i];
-        vctx.fillStyle="cyan";
-        vctx.fillRect(x,vcanvas.height-h/2,2,h/2);
-        x+=3;
+
+    let barWidth = 3;
+    let gap = 2;
+    let x = 0;
+
+    for(let i=0; i<dataArray.length; i++){
+        let barHeight = dataArray[i];
+        vctx.fillStyle = `hsl(${i*2}, 100%, 50%)`; // colorful gradient
+        // Draw bars from bottom upwards
+        vctx.fillRect(x, vcanvas.height - barHeight/2, barWidth, barHeight/2);
+        x += barWidth + gap;
     }
 }
 
