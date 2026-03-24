@@ -8,7 +8,6 @@
 <title>LitAcid</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Inter&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
@@ -24,11 +23,13 @@ font-family:Inter;
 overflow:hidden;
 }
 
-/* RAIN CANVAS */
-canvas{
+/* RAIN */
+#rain{
 position:fixed;
 top:0;
 left:0;
+width:100%;
+height:100%;
 z-index:-2;
 }
 
@@ -59,36 +60,6 @@ text-shadow:0 0 20px var(--theme);
 transition:0.2s;
 }
 
-.container{
-display:flex;
-justify-content:center;
-gap:30px;
-flex-wrap:wrap;
-padding:20px;
-}
-
-.box{
-background:rgba(255,255,255,0.05);
-border:1px solid var(--theme);
-border-radius:20px;
-padding:25px;
-width:260px;
-backdrop-filter:blur(10px);
-box-shadow:0 0 20px var(--theme);
-}
-
-.button{
-display:block;
-text-align:center;
-padding:10px;
-margin:10px 0;
-border-radius:10px;
-background:white;
-color:black;
-font-weight:bold;
-cursor:pointer;
-}
-
 </style>
 </head>
 
@@ -99,47 +70,35 @@ cursor:pointer;
 
 <header>
 <h1>LitAcid</h1>
-<p>Minecraft PvP • Server Manager • Web Dev</p>
+<p>Click anywhere to start experience</p>
 </header>
 
-<div class="container">
-
-<div class="box">
-<h3>Connect</h3>
-<a class="button" href="https://youtube.com/@litacid">YouTube</a>
-<a class="button" href="https://instagram.com/litacid2">Instagram</a>
-<div class="button">Discord: @litacid</div>
-</div>
-
-<div class="box">
-<h3>🚀 Get Your Website</h3>
-<div class="button" onclick="alert('DM me on Instagram or Discord')">Get Started</div>
-</div>
-
-</div>
-
 <!-- AUDIO -->
-<audio id="music" loop>
-<source src="https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3">
-</audio>
+<audio id="music" loop src="https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3"></audio>
 
-<audio id="thunderSound">
-<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6edb7f0c2e.mp3">
-</audio>
+<audio id="thunder" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6edb7f0c2e.mp3"></audio>
 
 <script>
 
-/* ================= SUPABASE ================= */
-
-const supabase = window.supabase.createClient(
-"https://exdavylpexaiwzqpaxje.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4ZGF2eWxwZXhhaXd6cXBheGplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTgyMzUsImV4cCI6MjA4OTkzNDIzNX0.Fog-IUWksijTELBUMCQZPoLLmzhblXy6_2VsK0VUw58"
-);
-
-/* ================= MUSIC (FIXED) ================= */
+/* ================= MUSIC (FIXED HARD) ================= */
 
 const music = document.getElementById("music");
 
+let started = false;
+
+async function startMusic(){
+
+if(started) return;
+started = true;
+
+/* FORCE PLAY */
+try{
+await music.play();
+}catch(e){
+console.log("retrying...");
+}
+
+/* AUDIO ANALYSIS */
 const ctx = new AudioContext();
 const src = ctx.createMediaElementSource(music);
 const analyser = ctx.createAnalyser();
@@ -147,40 +106,21 @@ const analyser = ctx.createAnalyser();
 src.connect(analyser);
 analyser.connect(ctx.destination);
 
-let started = false;
-
-async function startMusic(){
-if(started) return;
-started = true;
-
 await ctx.resume();
 
-music.volume = 1;
-music.play().catch(()=>{});
+/* COLOR REACTION */
+const data = new Uint8Array(analyser.frequencyBinCount);
 
-animateTheme();
-}
+function animate(){
+requestAnimationFrame(animate);
 
-["click","keydown","scroll","touchstart"].forEach(e=>{
-window.addEventListener(e,startMusic,{once:true});
-});
-
-/* ================= COLOR REACTION ================= */
-
-const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-function animateTheme(){
-requestAnimationFrame(animateTheme);
-
-analyser.getByteFrequencyData(dataArray);
+analyser.getByteFrequencyData(data);
 
 let total = 0;
-for(let i=0;i<dataArray.length;i++){
-total += dataArray[i];
-}
+for(let i=0;i<data.length;i++) total += data[i];
 
-let avg = total / dataArray.length;
-let brightness = Math.min(255, 60 + avg * 1.8);
+let avg = total / data.length;
+let brightness = Math.min(255, 60 + avg * 2);
 
 document.documentElement.style.setProperty(
 "--theme",
@@ -188,68 +128,85 @@ document.documentElement.style.setProperty(
 );
 }
 
-/* ================= RAIN ================= */
+animate();
+}
 
-const rainCanvas = document.getElementById("rain");
-const rctx = rainCanvas.getContext("2d");
+/* TRIGGER */
+window.addEventListener("click", startMusic, {once:true});
 
-rainCanvas.width = window.innerWidth;
-rainCanvas.height = window.innerHeight;
+/* ================= RAIN (VISIBLE FIX) ================= */
 
-let rain = [];
+const canvas = document.getElementById("rain");
+const ctxRain = canvas.getContext("2d");
 
-for(let i=0;i<500;i++){
-rain.push({
-x:Math.random()*rainCanvas.width,
-y:Math.random()*rainCanvas.height,
-xs:-2+Math.random()*4,
-ys:10+Math.random()*8
+function resize(){
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+let drops = [];
+
+for(let i=0;i<600;i++){
+drops.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+xs:-2 + Math.random()*4,
+ys:8 + Math.random()*8
 });
 }
 
 function drawRain(){
 
-rctx.clearRect(0,0,rainCanvas.width,rainCanvas.height);
+ctxRain.clearRect(0,0,canvas.width,canvas.height);
 
-rctx.strokeStyle="rgba(255,255,255,0.2)";
-rctx.beginPath();
+/* MUCH MORE VISIBLE */
+ctxRain.strokeStyle = "rgba(255,255,255,0.35)";
+ctxRain.lineWidth = 1.2;
 
-rain.forEach(r=>{
-rctx.moveTo(r.x,r.y);
-rctx.lineTo(r.x+r.xs,r.y+r.ys);
+ctxRain.beginPath();
 
-r.x+=r.xs;
-r.y+=r.ys;
+drops.forEach(d=>{
 
-if(r.y>rainCanvas.height){
-r.y=-10;
-r.x=Math.random()*rainCanvas.width;
+ctxRain.moveTo(d.x, d.y);
+ctxRain.lineTo(d.x + d.xs, d.y + d.ys);
+
+d.x += d.xs;
+d.y += d.ys;
+
+if(d.y > canvas.height){
+d.y = -10;
+d.x = Math.random()*canvas.width;
 }
+
 });
 
-rctx.stroke();
+ctxRain.stroke();
+
+requestAnimationFrame(drawRain);
 }
 
-setInterval(drawRain,30);
+drawRain();
 
 /* ================= THUNDER ================= */
 
 const lightning = document.getElementById("lightning");
-const thunder = document.getElementById("thunderSound");
+const thunder = document.getElementById("thunder");
 
 setInterval(()=>{
 
-if(Math.random()>0.75){
+if(Math.random() > 0.8){
 
-lightning.style.opacity="0.9";
+lightning.style.opacity = "1";
 
 setTimeout(()=>{
-lightning.style.opacity="0";
+lightning.style.opacity = "0";
 
-thunder.currentTime=0;
+thunder.currentTime = 0;
 thunder.play().catch(()=>{});
 
-},120);
+},100);
 
 }
 
