@@ -8,83 +8,143 @@
 <title>LitAcid</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Inter&display=swap" rel="stylesheet">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-:root{--theme:rgb(180,180,180)}
+
+:root{--theme:#aaa}
 
 body{
 margin:0;
 background:#050505;
 color:white;
 font-family:Inter;
-overflow:hidden;
+overflow-x:hidden;
 }
 
-/* CANVAS */
-canvas{position:fixed;top:0;left:0;z-index:-2;}
-#visualizer{bottom:0;height:140px;z-index:-1}
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:-3;
+}
 
-/* HEADER */
-header{text-align:center;padding:60px 20px}
-h1{font-family:Orbitron;color:var(--theme);text-shadow:0 0 20px var(--theme)}
+#visualizer{
+position:fixed;
+bottom:0;
+width:100%;
+height:120px;
+z-index:-2;
+}
 
-/* BOX */
-.container{display:flex;flex-wrap:wrap;justify-content:center;gap:30px}
+header{text-align:center;padding:60px 20px;}
+
+header h1{
+font-family:Orbitron;
+font-size:48px;
+color:var(--theme);
+text-shadow:0 0 20px var(--theme);
+}
+
+.container{
+display:flex;
+justify-content:center;
+gap:35px;
+padding:30px;
+flex-wrap:wrap;
+}
+
 .box{
 background:rgba(255,255,255,0.05);
 border:1px solid var(--theme);
-padding:20px;
-border-radius:15px;
+border-radius:20px;
+padding:28px;
 width:280px;
+backdrop-filter:blur(14px);
+box-shadow:0 0 20px var(--theme);
 }
 
-/* BUTTON */
 .button{
-background:white;color:black;
-padding:10px;margin:8px 0;
-text-align:center;border-radius:8px;cursor:pointer;
+display:block;
+text-align:center;
+padding:12px;
+margin:10px 0;
+border-radius:10px;
+background:white;
+color:black;
+font-weight:600;
+cursor:pointer;
 }
 
-/* EDITOR */
-#editorUnlock{position:fixed;top:10px;left:10px;z-index:10}
+#editorUnlock{
+position:fixed;
+top:10px;
+left:10px;
+z-index:50;
+}
 
-/* POPUP */
+#visitorBox{
+position:fixed;
+bottom:20px;
+right:20px;
+background:#0009;
+padding:8px 12px;
+border-radius:8px;
+display:none;
+}
+
+.lightning{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:white;
+opacity:0;
+pointer-events:none;
+}
+
 #contactPopup{
 display:none;
 position:fixed;
-top:0;left:0;width:100%;height:100%;
+top:0;
+left:0;
+width:100%;
+height:100%;
 background:#000c;
-justify-content:center;align-items:center;
+justify-content:center;
+align-items:center;
 }
 
-.popupBox{
-background:#111;padding:20px;border-radius:10px;width:300px;
+.popup{
+background:#111;
+padding:20px;
+border-radius:10px;
+width:300px;
 }
 
-input,textarea{width:100%;margin:5px 0;padding:6px}
+input,textarea{width:100%;margin:5px 0;padding:8px}
 
-/* LIGHTNING */
-#lightning{
-position:fixed;top:0;left:0;width:100%;height:100%;
-background:white;opacity:0;pointer-events:none;
-}
 </style>
 </head>
 
 <body>
 
 <div id="editorUnlock">
-<input id="editorPass" placeholder="code">
+<input id="editorPass" placeholder="editor code">
 <button onclick="unlockEditor()">unlock</button>
 </div>
 
 <canvas id="rain"></canvas>
 <canvas id="visualizer"></canvas>
-<div id="lightning"></div>
+<div id="lightning" class="lightning"></div>
 
 <header>
 <h1>LitAcid</h1>
+<p>Minecraft PvP • Server Manager • Game Dev</p>
 </header>
 
 <div class="container">
@@ -97,8 +157,8 @@ background:white;opacity:0;pointer-events:none;
 </div>
 
 <div class="box">
-<h3>What I am doing rn</h3>
-<div id="editableContent">Nothing rn</div>
+<h3>What I am working on rn</h3>
+<div id="editableContent">Nothing right now.</div>
 </div>
 
 <div class="box">
@@ -108,12 +168,14 @@ background:white;opacity:0;pointer-events:none;
 
 </div>
 
+<div id="visitorBox">Visitors: <span id="visitorCount">0</span></div>
+
 <!-- POPUP -->
 <div id="contactPopup">
-<div class="popupBox">
+<div class="popup">
 
-<input id="clientName" placeholder="name">
-<textarea id="clientMsg" placeholder="message"></textarea>
+<input id="clientName" placeholder="Your name">
+<textarea id="clientMsg" placeholder="Your request"></textarea>
 
 <div class="button" onclick="sendMessage()">Send</div>
 <div class="button" onclick="closeContact()">Close</div>
@@ -132,33 +194,35 @@ const supabase = window.supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 );
 
-/* EDITOR */
-function unlockEditor(){
-if(document.getElementById("editorPass").value==="kys2"){
-let el=document.getElementById("editableContent");
-el.contentEditable=true;
+/* FIREBASE VISITOR */
+const firebaseConfig={databaseURL:"https://dummy.firebaseio.com"}
+firebase.initializeApp(firebaseConfig)
+const db=firebase.database()
 
-/* LOAD GLOBAL */
-loadContent();
+db.ref("visits").transaction(v=>(v||0)+1)
+db.ref("visits").on("value",snap=>{
+document.getElementById("visitorCount").textContent=snap.val()
+})
 
-el.addEventListener("input",saveContent);
-}
-}
+/* EDITOR GLOBAL */
+async function unlockEditor(){
+if(editorPass.value==="kys2"){
+editableContent.contentEditable=true;
+visitorBox.style.display="block";
 
-async function saveContent(){
-await supabase.from("site_content").upsert({id:1,text:editableContent.innerText});
-}
-
-async function loadContent(){
 let {data}=await supabase.from("site_content").select("*").eq("id",1).single();
 if(data) editableContent.innerText=data.text;
+
+editableContent.addEventListener("input",async()=>{
+await supabase.from("site_content").upsert({id:1,text:editableContent.innerText});
+});
+}
 }
 
-/* POPUP */
+/* CONTACT */
 function openContact(){contactPopup.style.display="flex"}
 function closeContact(){contactPopup.style.display="none"}
 
-/* MESSAGE */
 async function sendMessage(){
 let name=clientName.value,msg=clientMsg.value;
 if(!name||!msg)return alert("fill");
@@ -182,7 +246,6 @@ let started=false;
 window.addEventListener("click",async()=>{
 if(!started){
 await ctx.resume();
-music.volume=1;
 music.play();
 started=true;
 draw();
@@ -196,18 +259,14 @@ canvas.width=window.innerWidth;
 
 function draw(){
 requestAnimationFrame(draw);
-
 let data=new Uint8Array(analyser.frequencyBinCount);
 analyser.getByteFrequencyData(data);
 
 c.clearRect(0,0,canvas.width,canvas.height);
 
 let total=0,x=0;
-
 data.forEach(v=>{
-let h=v*0.7;
-c.fillStyle="white";
-c.fillRect(x,canvas.height-h,2,h);
+c.fillRect(x,canvas.height-v/2,2,v/2);
 x+=3;
 total+=v;
 });
@@ -223,8 +282,8 @@ rainCanvas.width=innerWidth;
 rainCanvas.height=innerHeight;
 
 let rain=[];
-for(let i=0;i<500;i++){
-rain.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,xs:-2+Math.random()*4,ys:8+Math.random()*6});
+for(let i=0;i<400;i++){
+rain.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,xs:-3+Math.random()*6,ys:10});
 }
 
 setInterval(()=>{
@@ -235,10 +294,8 @@ rctx.beginPath();
 rain.forEach(r=>{
 rctx.moveTo(r.x,r.y);
 rctx.lineTo(r.x+r.xs,r.y+r.ys);
-
 r.x+=r.xs;
 r.y+=r.ys;
-
 if(r.y>innerHeight){r.y=0;r.x=Math.random()*innerWidth}
 });
 
@@ -247,9 +304,8 @@ rctx.stroke();
 
 /* LIGHTNING */
 setInterval(()=>{
-if(Math.random()>0.75){
+if(Math.random()>0.7){
 lightning.style.opacity=1;
-
 setTimeout(()=>{
 lightning.style.opacity=0;
 thunderSound.currentTime=0;
