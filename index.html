@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LitAcid</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Inter&display=swap" rel="stylesheet">
-
 <style>
 :root{--theme:#aaa}
 body{
@@ -17,7 +16,7 @@ overflow-x:hidden;
 }
 canvas{position:fixed;top:0;left:0;z-index:-3;}
 #visualizer{position:fixed;bottom:0;width:100%;height:120px;z-index:-2;}
-#lightning{position:fixed;top:0;left:0;width:100%;height:100%;background:white;opacity:0;pointer-events:none;z-index:-1;}
+#lightning{position:fixed;top:0;left:0;width:100%;height:100%;background:white;opacity:0;pointer-events:none;z-index:-1;transition:opacity 0.1s;}
 header{text-align:center;padding:60px 20px;}
 header h1{font-family:Orbitron;font-size:48px;color:var(--theme);text-shadow:0 0 20px var(--theme);transition:0.2s;}
 .container{display:flex;justify-content:center;gap:35px;padding:30px;flex-wrap:wrap;}
@@ -30,11 +29,13 @@ header h1{font-family:Orbitron;font-size:48px;color:var(--theme);text-shadow:0 0
 </head>
 <body>
 
+<!-- Editor Unlock -->
 <div id="editorUnlock">
 <input id="editorPass" placeholder="editor code">
 <button onclick="unlockEditor()">unlock</button>
 </div>
 
+<!-- Rain and Visualizer -->
 <canvas id="rain"></canvas>
 <canvas id="visualizer"></canvas>
 <div id="lightning"></div>
@@ -46,6 +47,7 @@ header h1{font-family:Orbitron;font-size:48px;color:var(--theme);text-shadow:0 0
 
 <div class="container">
 
+<!-- Connections -->
 <div class="box">
 <h3>Connect</h3>
 <a class="button" href="https://youtube.com/@litacid">YouTube</a>
@@ -53,6 +55,7 @@ header h1{font-family:Orbitron;font-size:48px;color:var(--theme);text-shadow:0 0
 <div class="button">Discord: @litacid</div>
 </div>
 
+<!-- Minecraft Server Info -->
 <div class="box server">
 <h3>Minecraft Server</h3>
 <p>IP: <b id="serverIP">quitmc.playwithbao.com</b>
@@ -63,11 +66,13 @@ header h1{font-family:Orbitron;font-size:48px;color:var(--theme);text-shadow:0 0
 <div id="playerList">Loading...</div>
 </div>
 
+<!-- Editor -->
 <div class="box">
 <h3>What I am working on rn</h3>
 <div id="editableContent">Nothing right now.</div>
 </div>
 
+<!-- Get Your Website -->
 <div class="box">
 <h3>🚀 Get Your Own Website</h3>
 <div class="button" onclick="alert('DM me on Instagram or Discord to get your own website')">Get Started</div>
@@ -75,6 +80,7 @@ header h1{font-family:Orbitron;font-size:48px;color:var(--theme);text-shadow:0 0
 
 </div>
 
+<!-- Audio -->
 <audio id="music" loop playsinline muted>
 <source src="https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3">
 </audio>
@@ -86,86 +92,86 @@ const editableContent = document.getElementById("editableContent");
 const editorPass = document.getElementById("editorPass");
 
 function unlockEditor(){
-if(editorPass.value==="kys2"){
-editableContent.contentEditable = true;
-editableContent.innerText = localStorage.getItem("content") || "Nothing right now.";
-editableContent.addEventListener("input",()=>{
-localStorage.setItem("content", editableContent.innerText);
-});
-alert("Editor enabled");
-}
+    if(editorPass.value==="kys2"){
+        editableContent.contentEditable = true;
+        editableContent.innerText = localStorage.getItem("content") || "Nothing right now.";
+        editableContent.addEventListener("input",()=>{
+            localStorage.setItem("content", editableContent.innerText);
+        });
+        alert("Editor enabled");
+    }
 }
 
 /* ================= COPY IP ================= */
 function copyIP(){
-navigator.clipboard.writeText("quitmc.playwithbao.com");
-alert("IP Copied");
+    navigator.clipboard.writeText("quitmc.playwithbao.com");
+    alert("IP Copied");
 }
 
 /* ================= SERVER STATUS ================= */
 async function fetchServer(){
-const r = await fetch("https://api.mcsrvstat.us/3/quitmc.playwithbao.com");
-const d = await r.json();
-document.getElementById("serverStatus").textContent = d.online?"Online":"Offline";
-document.getElementById("serverPlayers").textContent = d.players?`${d.players.online}/${d.players.max}`:"0";
-document.getElementById("serverMOTD").textContent = d.motd?.clean||"";
-const list = document.getElementById("playerList");
-list.innerHTML = "";
-if(d.players?.list){
-d.players.list.forEach(p=>{
-const div=document.createElement("div");
-div.innerHTML=`<img src="https://mc-heads.net/avatar/${p}/30"> ${p}`;
-list.appendChild(div);
-});
-}else{ list.innerHTML="No players online";}
+    const r = await fetch("https://api.mcsrvstat.us/3/quitmc.playwithbao.com");
+    const d = await r.json();
+    document.getElementById("serverStatus").textContent = d.online?"Online":"Offline";
+    document.getElementById("serverPlayers").textContent = d.players?`${d.players.online}/${d.players.max}`:"0";
+    document.getElementById("serverMOTD").textContent = d.motd?.clean||"";
+    const list = document.getElementById("playerList");
+    list.innerHTML = "";
+    if(d.players?.list){
+        d.players.list.forEach(p=>{
+            const div=document.createElement("div");
+            div.innerHTML=`<img src="https://mc-heads.net/avatar/${p}/30"> ${p}`;
+            list.appendChild(div);
+        });
+    }else{ list.innerHTML="No players online";}
 }
 fetchServer();
 setInterval(fetchServer,15000);
 
-/* ================= MUSIC (NO-FAIL) ================= */
+/* ================= MUSIC (BUFFER + NO-FAIL) ================= */
 const music = document.getElementById("music");
 let ctx, analyser, dataArray;
 let started = false;
 
-async function startMusic(){
-if(started) return;
-started = true;
-
-// muted autoplay first (allowed)
-music.muted = true;
-await music.play().catch(()=>{});
-
-// unlock audio fully
-music.muted = false;
-music.volume = 1;
-
-// AudioContext for analysis
-ctx = new (window.AudioContext || window.webkitAudioContext)();
-const src = ctx.createMediaElementSource(music);
-analyser = ctx.createAnalyser();
-src.connect(analyser);
-analyser.connect(ctx.destination);
-await ctx.resume();
-dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-animateTheme();
-animateVisualizer();
+async function playMusicNoFail(){
+    if(started) return;
+    started = true;
+    try{
+        ctx = new (window.AudioContext||window.webkitAudioContext)();
+        const res = await fetch(music.querySelector('source').src);
+        const arrayBuffer = await res.arrayBuffer();
+        const buffer = await ctx.decodeAudioData(arrayBuffer);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        analyser = ctx.createAnalyser();
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        source.connect(analyser);
+        analyser.connect(ctx.destination);
+        source.start(0);
+        animateTheme();
+        animateVisualizer();
+    }catch(e){
+        console.error("Audio failed, retrying in 1s", e);
+        started = false;
+        setTimeout(playMusicNoFail,1000);
+    }
 }
 
 ["click","touchstart","keydown","scroll","mousemove"].forEach(e=>{
-window.addEventListener(e,startMusic,{once:true});
+    window.addEventListener(e, playMusicNoFail, {once:true});
 });
 
 /* ================= COLOR REACTION ================= */
 function animateTheme(){
-requestAnimationFrame(animateTheme);
-if(!analyser) return;
-analyser.getByteFrequencyData(dataArray);
-let total=0;
-for(let i=0;i<dataArray.length;i++) total+=dataArray[i];
-let avg=total/dataArray.length;
-let brightness=Math.min(255, 60 + avg*2);
-document.documentElement.style.setProperty("--theme", `rgb(${brightness},${brightness},${brightness})`);
+    requestAnimationFrame(animateTheme);
+    if(!analyser) return;
+    analyser.getByteFrequencyData(dataArray);
+    let total=0;
+    for(let i=0;i<dataArray.length;i++) total+=dataArray[i];
+    let avg = total/dataArray.length;
+    let brightness = Math.min(255, 60 + avg*2);
+    document.documentElement.style.setProperty("--theme", `rgb(${brightness},${brightness},${brightness})`);
 }
 
 /* ================= VISUALIZER ================= */
@@ -173,19 +179,18 @@ const vcanvas = document.getElementById("visualizer");
 const vctx = vcanvas.getContext("2d");
 vcanvas.width = window.innerWidth;
 vcanvas.height = 120;
-
 function animateVisualizer(){
-requestAnimationFrame(animateVisualizer);
-if(!analyser) return;
-analyser.getByteFrequencyData(dataArray);
-vctx.clearRect(0,0,vcanvas.width,vcanvas.height);
-let x=0;
-for(let i=0;i<dataArray.length;i++){
-let h=dataArray[i];
-vctx.fillStyle="cyan";
-vctx.fillRect(x,vcanvas.height-h/2,2,h/2);
-x+=3;
-}
+    requestAnimationFrame(animateVisualizer);
+    if(!analyser) return;
+    analyser.getByteFrequencyData(dataArray);
+    vctx.clearRect(0,0,vcanvas.width,vcanvas.height);
+    let x=0;
+    for(let i=0;i<dataArray.length;i++){
+        let h = dataArray[i];
+        vctx.fillStyle="cyan";
+        vctx.fillRect(x,vcanvas.height-h/2,2,h/2);
+        x+=3;
+    }
 }
 
 /* ================= RAIN ================= */
@@ -196,18 +201,18 @@ resize(); window.addEventListener("resize",resize);
 let rain=[];
 for(let i=0;i<500;i++){rain.push({x:Math.random()*rainCanvas.width,y:Math.random()*rainCanvas.height,xs:-2+Math.random()*4,ys:8+Math.random()*8});}
 function drawRain(){
-rctx.clearRect(0,0,rainCanvas.width,rainCanvas.height);
-rctx.strokeStyle="rgba(255,255,255,0.3)";
-rctx.lineWidth=1.2;
-rctx.beginPath();
-rain.forEach(r=>{
-rctx.moveTo(r.x,r.y);
-rctx.lineTo(r.x+r.xs,r.y+r.ys);
-r.x+=r.xs; r.y+=r.ys;
-if(r.y>rainCanvas.height){r.y=-10; r.x=Math.random()*rainCanvas.width;}
-});
-rctx.stroke();
-requestAnimationFrame(drawRain);
+    rctx.clearRect(0,0,rainCanvas.width,rainCanvas.height);
+    rctx.strokeStyle="rgba(255,255,255,0.3)";
+    rctx.lineWidth=1.2;
+    rctx.beginPath();
+    rain.forEach(r=>{
+        rctx.moveTo(r.x,r.y);
+        rctx.lineTo(r.x+r.xs,r.y+r.ys);
+        r.x+=r.xs; r.y+=r.ys;
+        if(r.y>rainCanvas.height){r.y=-10; r.x=Math.random()*rainCanvas.width;}
+    });
+    rctx.stroke();
+    requestAnimationFrame(drawRain);
 }
 drawRain();
 
@@ -215,16 +220,15 @@ drawRain();
 const lightning = document.getElementById("lightning");
 const thunder = document.getElementById("thunder");
 setInterval(()=>{
-if(Math.random()>0.75){
-lightning.style.opacity="1";
-setTimeout(()=>{
-lightning.style.opacity="0";
-thunder.currentTime=0;
-thunder.play().catch(()=>{});
-},100);
-}
+    if(Math.random()>0.75){
+        lightning.style.opacity="1";
+        setTimeout(()=>{
+            lightning.style.opacity="0";
+            thunder.currentTime=0;
+            thunder.play().catch(()=>{});
+        },100);
+    }
 },4000);
 </script>
-
 </body>
 </html>
