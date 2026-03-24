@@ -9,8 +9,11 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Inter&display=swap" rel="stylesheet">
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-:root{--theme:rgb(200,200,200)}
+
+:root{--theme:rgb(180,180,180)}
 
 body{
 margin:0;
@@ -21,7 +24,26 @@ overflow-x:hidden;
 transition:0.3s;
 }
 
+/* CANVAS */
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:-3;
+}
+
+#visualizer{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+height:140px;
+z-index:-2;
+}
+
+/* HEADER */
 header{text-align:center;padding:60px 20px}
+
 header h1{
 font-family:Orbitron;
 font-size:48px;
@@ -29,6 +51,7 @@ color:var(--theme);
 text-shadow:0 0 20px var(--theme);
 }
 
+/* BOXES */
 .container{
 display:flex;
 justify-content:center;
@@ -47,6 +70,7 @@ backdrop-filter:blur(14px);
 box-shadow:0 0 20px var(--theme);
 }
 
+/* BUTTON */
 .button{
 display:block;
 text-align:center;
@@ -96,112 +120,182 @@ border:none;
 
 <body>
 
+<canvas id="rain"></canvas>
+<canvas id="visualizer"></canvas>
+
 <header>
 <h1>LitAcid</h1>
-<p>Minecraft PvP • Server Manager • Website Developer</p>
+<p>Minecraft PvP • Server Manager • Website Dev</p>
 </header>
 
 <div class="container">
 
 <div class="box">
 <h3>Connect</h3>
+<a class="button" href="https://youtube.com/@litacid">YouTube</a>
+<a class="button" href="https://instagram.com/litacid2">Instagram</a>
 <div class="button">Discord: @litacid</div>
-<a class="button" href="https://instagram.com/litacid2" target="_blank">Instagram</a>
+</div>
+
+<div class="box">
+<h3>Minecraft Server</h3>
+<p id="serverStatus">Loading...</p>
+</div>
+
+<div class="box">
+<h3>What I am doing rn</h3>
+<div id="editableContent" contenteditable="true">
+Working on websites.
+</div>
 </div>
 
 <div class="box">
 <h3>🚀 Get Your Own Website</h3>
-
-<div class="button" onclick="openContact()">
-Get Started
-</div>
-
-<p style="font-size:13px;opacity:0.7">
-Starts at $20 • Fast delivery
-</p>
+<div class="button" onclick="openContact()">Get Started</div>
+<p style="font-size:13px;opacity:0.7">Starts at $20</p>
 </div>
 
 </div>
 
 <!-- POPUP -->
 <div id="contactPopup">
-  <div class="popupBox">
+<div class="popupBox">
 
-    <h3>🚀 Get Your Website</h3>
+<h3>🚀 Get Your Website</h3>
 
-    <p style="font-size:14px;opacity:0.8">
-      DM me or send request 👇
-    </p>
+<a class="button" href="https://instagram.com/litacid2" target="_blank">Instagram</a>
+<div class="button">Discord: @litacid</div>
 
-    <a class="button" href="https://instagram.com/litacid2" target="_blank">
-      Instagram DM
-    </a>
+<hr>
 
-    <div class="button">
-      Discord: @litacid
-    </div>
+<input id="clientName" placeholder="Your name">
+<textarea id="clientMsg" placeholder="What do you need?"></textarea>
 
-    <hr style="margin:15px 0;opacity:0.2">
+<div class="button" onclick="sendMessage()">Send</div>
+<div class="button" onclick="closeContact()">Close</div>
 
-    <input id="clientName" placeholder="Your name">
-    <textarea id="clientMsg" placeholder="What do you need?"></textarea>
-
-    <div class="button" onclick="sendMessage()">
-      Send Request
-    </div>
-
-    <div class="button" onclick="closeContact()">Close</div>
-
-  </div>
+</div>
 </div>
 
-<!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- AUDIO -->
+<audio id="music" loop>
+<source src="https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3">
+</audio>
 
 <script>
+
+/* SUPABASE */
 const supabase = window.supabase.createClient(
-  "https://exdavylpexaiwzqpaxje.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4ZGF2eWxwZXhhaXd6cXBheGplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTgyMzUsImV4cCI6MjA4OTkzNDIzNX0.Fog-IUWksijTELBUMCQZPoLLmzhblXy6_2VsK0VUw58"
+"https://exdavylpexaiwzqpaxje.supabase.co",
+"YOUR_ANON_KEY"
 );
 
 /* POPUP */
-function openContact(){
-  document.getElementById("contactPopup").style.display="flex";
-}
-
-function closeContact(){
-  document.getElementById("contactPopup").style.display="none";
-}
+function openContact(){document.getElementById("contactPopup").style.display="flex";}
+function closeContact(){document.getElementById("contactPopup").style.display="none";}
 
 /* SEND MESSAGE */
 async function sendMessage(){
+const name=document.getElementById("clientName").value;
+const msg=document.getElementById("clientMsg").value;
 
-  const name = document.getElementById("clientName").value;
-  const msg = document.getElementById("clientMsg").value;
+if(!name||!msg){alert("Fill all fields");return;}
 
-  if(!name || !msg){
-    alert("Fill all fields");
-    return;
-  }
+const {error}=await supabase.from("client_requests").insert([{name,message:msg}]);
 
-  const { error } = await supabase
-    .from("client_requests")
-    .insert([
-      { name: name, message: msg }
-    ]);
-
-  if(error){
-    alert("Error sending message");
-    console.log(error);
-  } else {
-    alert("Request sent successfully!");
-
-    document.getElementById("clientName").value="";
-    document.getElementById("clientMsg").value="";
-
-    closeContact();
-  }
+if(error){alert("Error");console.log(error);}
+else{alert("Sent");closeContact();}
 }
+
+/* MUSIC FIX */
+const music=document.getElementById("music");
+music.volume=1;
+
+let started=false;
+window.addEventListener("click",()=>{
+if(!started){
+music.play().catch(()=>{});
+started=true;
+}
+});
+
+/* VISUALIZER */
+const ctx=new AudioContext();
+const src=ctx.createMediaElementSource(music);
+const analyser=ctx.createAnalyser();
+
+src.connect(analyser);
+analyser.connect(ctx.destination);
+
+const canvas=document.getElementById("visualizer");
+const c=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+
+function draw(){
+requestAnimationFrame(draw);
+
+const data=new Uint8Array(analyser.frequencyBinCount);
+analyser.getByteFrequencyData(data);
+
+c.clearRect(0,0,canvas.width,canvas.height);
+
+let total=0;
+let x=0;
+
+data.forEach(v=>{
+const h=v*0.7;
+c.fillStyle="white";
+c.fillRect(x,canvas.height-h,2,h);
+x+=3;
+total+=v;
+});
+
+/* THEME */
+let val=Math.min(255,40+total/data.length*2);
+document.documentElement.style.setProperty("--theme",`rgb(${val},${val},${val})`);
+}
+
+music.onplay=()=>{
+ctx.resume();
+draw();
+};
+
+/* RAIN */
+const rainCanvas=document.getElementById("rain");
+const rctx=rainCanvas.getContext("2d");
+
+rainCanvas.width=window.innerWidth;
+rainCanvas.height=window.innerHeight;
+
+let rain=[];
+
+for(let i=0;i<300;i++){
+rain.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,ys:10});
+}
+
+setInterval(()=>{
+rctx.clearRect(0,0,rainCanvas.width,rainCanvas.height);
+rctx.strokeStyle="rgba(255,255,255,0.1)";
+rctx.beginPath();
+
+rain.forEach(r=>{
+rctx.moveTo(r.x,r.y);
+rctx.lineTo(r.x,r.y+10);
+r.y+=r.ys;
+if(r.y>window.innerHeight)r.y=0;
+});
+
+rctx.stroke();
+},30);
+
+/* SERVER STATUS */
+async function fetchServer(){
+const r=await fetch("https://api.mcsrvstat.us/3/quitmc.playwithbao.com");
+const d=await r.json();
+document.getElementById("serverStatus").textContent=d.online?"Online":"Offline";
+}
+fetchServer();
+
 </script>
 
 </body>
