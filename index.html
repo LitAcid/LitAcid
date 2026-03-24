@@ -9,11 +9,8 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Inter&display=swap" rel="stylesheet">
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <style>
-:root{--theme:rgb(255,0,0)}
+:root{--theme:rgb(200,200,200)}
 
 body{
 margin:0;
@@ -21,11 +18,8 @@ background:#050505;
 color:white;
 font-family:Inter;
 overflow-x:hidden;
-transition:0.2s;
+transition:0.3s;
 }
-
-canvas{position:fixed;top:0;left:0;z-index:-3}
-#visualizer{position:fixed;bottom:0;width:100%;height:120px;z-index:-2;opacity:.6}
 
 header{text-align:center;padding:60px 20px}
 header h1{
@@ -35,7 +29,13 @@ color:var(--theme);
 text-shadow:0 0 20px var(--theme);
 }
 
-.container{display:flex;justify-content:center;gap:35px;padding:30px;flex-wrap:wrap}
+.container{
+display:flex;
+justify-content:center;
+gap:35px;
+padding:30px;
+flex-wrap:wrap;
+}
 
 .box{
 background:rgba(255,255,255,0.05);
@@ -47,8 +47,6 @@ backdrop-filter:blur(14px);
 box-shadow:0 0 20px var(--theme);
 }
 
-.server{width:320px}
-
 .button{
 display:block;
 text-align:center;
@@ -57,248 +55,153 @@ margin:10px 0;
 border-radius:10px;
 background:white;
 color:black;
-text-decoration:none;
 font-weight:600;
 cursor:pointer;
 }
 
-#editorUnlock{position:fixed;top:10px;left:10px;z-index:50}
-#visitorBox{display:none;position:fixed;bottom:20px;right:20px;background:#0009;padding:8px 12px;border-radius:8px}
+/* POPUP */
+#contactPopup{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.85);
+align-items:center;
+justify-content:center;
+z-index:999;
+}
 
-.lightning{position:fixed;top:0;left:0;width:100%;height:100%;background:white;opacity:0;pointer-events:none}
+.popupBox{
+background:#111;
+padding:25px;
+border-radius:15px;
+width:320px;
+text-align:center;
+border:1px solid var(--theme);
+box-shadow:0 0 20px var(--theme);
+}
+
+input, textarea{
+width:90%;
+padding:8px;
+margin:5px;
+border-radius:6px;
+border:none;
+}
+
 </style>
 </head>
 
 <body>
 
-<div id="editorUnlock">
-<input id="editorPass" type="password" placeholder="editor code">
-<button onclick="unlockEditor()">unlock</button>
-</div>
-
-<canvas id="rain"></canvas>
-<canvas id="visualizer"></canvas>
-<div id="lightning" class="lightning"></div>
-
 <header>
 <h1>LitAcid</h1>
-<p>Minecraft PvP • Server Manager • Game Dev</p>
+<p>Minecraft PvP • Server Manager • Website Developer</p>
 </header>
 
 <div class="container">
 
 <div class="box">
 <h3>Connect</h3>
-<a class="button" href="#">YouTube</a>
-<a class="button" href="#">Instagram</a>
 <div class="button">Discord: @litacid</div>
-</div>
-
-<div class="box server">
-<h3>Minecraft Server</h3>
-
-<p>
-IP: <b>quitmc.playwithbao.com</b>
-<button onclick="copyIP()">Copy</button>
-</p>
-
-<p>
-Status: <span id="serverStatus">Loading...</span><br>
-Players: <span id="serverPlayers">...</span>
-</p>
-
-<p id="serverMOTD"></p>
-<div id="playerList">Loading...</div>
+<a class="button" href="https://instagram.com/litacid2" target="_blank">Instagram</a>
 </div>
 
 <div class="box">
-<h3>What I am working on rn</h3>
-<div id="editableContent" contenteditable="false">
-Nothing right now.
+<h3>🚀 Get Your Own Website</h3>
+
+<div class="button" onclick="openContact()">
+Get Started
 </div>
+
+<p style="font-size:13px;opacity:0.7">
+Starts at $20 • Fast delivery
+</p>
 </div>
 
 </div>
 
-<div id="visitorBox">
-Visitors: <span id="visitorCount">0</span>
+<!-- POPUP -->
+<div id="contactPopup">
+  <div class="popupBox">
+
+    <h3>🚀 Get Your Website</h3>
+
+    <p style="font-size:14px;opacity:0.8">
+      DM me or send request 👇
+    </p>
+
+    <a class="button" href="https://instagram.com/litacid2" target="_blank">
+      Instagram DM
+    </a>
+
+    <div class="button">
+      Discord: @litacid
+    </div>
+
+    <hr style="margin:15px 0;opacity:0.2">
+
+    <input id="clientName" placeholder="Your name">
+    <textarea id="clientMsg" placeholder="What do you need?"></textarea>
+
+    <div class="button" onclick="sendMessage()">
+      Send Request
+    </div>
+
+    <div class="button" onclick="closeContact()">Close</div>
+
+  </div>
 </div>
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+const supabase = window.supabase.createClient(
+  "https://exdavylpexaiwzqpaxje.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4ZGF2eWxwZXhhaXd6cXBheGplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTgyMzUsImV4cCI6MjA4OTkzNDIzNX0.Fog-IUWksijTELBUMCQZPoLLmzhblXy6_2VsK0VUw58"
+);
 
-/* FIREBASE */
-const firebaseConfig={
-apiKey:"YOUR_API_KEY",
-authDomain:"YOUR_PROJECT.firebaseapp.com",
-databaseURL:"https://YOUR_PROJECT.firebaseio.com",
-projectId:"YOUR_PROJECT"
-}
-firebase.initializeApp(firebaseConfig)
-const db=firebase.database()
-
-/* EDITOR */
-const editor=document.getElementById("editableContent")
-
-function unlockEditor(){
-if(document.getElementById("editorPass").value==="kys2"){
-editor.contentEditable=true
-document.getElementById("visitorBox").style.display="block"
-
-editor.addEventListener("input",()=>{
-db.ref("site/content").set(editor.innerHTML)
-})
-}
+/* POPUP */
+function openContact(){
+  document.getElementById("contactPopup").style.display="flex";
 }
 
-db.ref("site/content").on("value",snap=>{
-if(snap.val()) editor.innerHTML=snap.val()
-})
-
-/* VISITS */
-const visitRef=db.ref("visits")
-visitRef.transaction(v=>(v||0)+1)
-visitRef.on("value",snap=>{
-visitorCount.textContent=snap.val()
-})
-
-/* COPY */
-function copyIP(){
-navigator.clipboard.writeText("quitmc.playwithbao.com")
-alert("IP Copied")
+function closeContact(){
+  document.getElementById("contactPopup").style.display="none";
 }
 
-/* SERVER */
-async function fetchServer(){
-const r=await fetch("https://api.mcsrvstat.us/3/quitmc.playwithbao.com")
-const d=await r.json()
+/* SEND MESSAGE */
+async function sendMessage(){
 
-serverStatus.textContent=d.online?"Online":"Offline"
-serverPlayers.textContent=d.players?`${d.players.online}/${d.players.max}`:"0"
-serverMOTD.textContent=d.motd?.clean||""
+  const name = document.getElementById("clientName").value;
+  const msg = document.getElementById("clientMsg").value;
 
-playerList.innerHTML=d.players?.list
-? d.players.list.map(p=>`<div>${p}</div>`).join("")
-: "No players online"
+  if(!name || !msg){
+    alert("Fill all fields");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("client_requests")
+    .insert([
+      { name: name, message: msg }
+    ]);
+
+  if(error){
+    alert("Error sending message");
+    console.log(error);
+  } else {
+    alert("Request sent successfully!");
+
+    document.getElementById("clientName").value="";
+    document.getElementById("clientMsg").value="";
+
+    closeContact();
+  }
 }
-fetchServer()
-setInterval(fetchServer,15000)
-
-/* 🔥 REAL AUDIO SYSTEM (BUFFER METHOD) */
-
-let ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
-let analyser = ctxAudio.createAnalyser();
-analyser.fftSize = 256;
-
-let sourceNode;
-let bufferData;
-
-/* LOAD AUDIO */
-async function loadAudio() {
-  const res = await fetch("https://image2url.com/r2/default/audio/1774360436413-b8386253-55ef-4984-adfe-37e6030635d6.mp3");
-  const arrayBuffer = await res.arrayBuffer();
-  bufferData = await ctxAudio.decodeAudioData(arrayBuffer);
-}
-
-loadAudio();
-
-/* PLAY AUDIO */
-function playAudio() {
-  if (!bufferData) return;
-
-  sourceNode = ctxAudio.createBufferSource();
-  sourceNode.buffer = bufferData;
-  sourceNode.loop = true;
-
-  sourceNode.connect(analyser);
-  analyser.connect(ctxAudio.destination);
-
-  sourceNode.start(0);
-
-  drawVisualizer();
-}
-
-/* START ON CLICK */
-window.addEventListener("click", async () => {
-  await ctxAudio.resume();
-  playAudio();
-}, { once: true });
-
-/* VISUALIZER */
-const vcanvas = document.getElementById("visualizer");
-const vctx = vcanvas.getContext("2d");
-
-vcanvas.width = window.innerWidth;
-vcanvas.height = 120;
-
-let smooth = 0;
-
-function drawVisualizer() {
-  requestAnimationFrame(drawVisualizer);
-
-  const data = new Uint8Array(analyser.frequencyBinCount);
-  analyser.getByteFrequencyData(data);
-
-  vctx.clearRect(0, 0, vcanvas.width, vcanvas.height);
-
-  let total = 0;
-  let x = 0;
-  const barWidth = vcanvas.width / data.length;
-
-  data.forEach(v => {
-    vctx.fillStyle = "cyan";
-    vctx.fillRect(x, vcanvas.height - v / 2, barWidth, v / 2);
-    x += barWidth + 1;
-    total += v;
-  });
-
-  smooth = smooth * 0.85 + (total / data.length) * 0.15;
-
-  const red = Math.min(255, smooth * 2);
-  const glow = smooth / 255;
-
-  document.documentElement.style.setProperty("--theme", `rgb(${red},0,0)`);
-  document.body.style.boxShadow = `inset 0 0 ${60 + smooth}px rgba(${red},0,0,${glow})`;
-}
-
-/* RAIN */
-const rainCanvas=document.getElementById("rain")
-const rctx=rainCanvas.getContext("2d")
-
-rainCanvas.width=window.innerWidth
-rainCanvas.height=window.innerHeight
-
-let rain=[]
-
-for(let i=0;i<400;i++){
-rain.push({
-x:Math.random()*rainCanvas.width,
-y:Math.random()*rainCanvas.height,
-xs:-3+Math.random()*6,
-ys:10+Math.random()*8
-})
-}
-
-setInterval(()=>{
-rctx.clearRect(0,0,rainCanvas.width,rainCanvas.height)
-rctx.beginPath()
-
-rain.forEach(r=>{
-rctx.moveTo(r.x,r.y)
-rctx.lineTo(r.x+r.xs,r.y+r.ys)
-
-r.x+=r.xs
-r.y+=r.ys
-
-if(r.y>rainCanvas.height){
-r.y=-10
-r.x=Math.random()*rainCanvas.width
-}
-})
-
-rctx.strokeStyle="rgba(255,255,255,0.15)"
-rctx.stroke()
-},30)
-
 </script>
 
 </body>
